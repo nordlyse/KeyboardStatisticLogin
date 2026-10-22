@@ -17,5 +17,17 @@ services:
       retries: 12
       start_period: 10s
 
+  word-frequency:
+    build: ./word-frequency
+    ports:
+      - "8080:8080"
+    environment:
+      WORD_FREQUENCY_DATABASE_URL: jdbc:postgresql://pgvector:5432/keyboardstatisticlogin
+      WORD_FREQUENCY_DATABASE_USERNAME: keyboardstatisticlogin
+      WORD_FREQUENCY_DATABASE_PASSWORD: keyboardstatisticlogin
+    depends_on:
+      pgvector:
+        condition: service_healthy
+
 volumes:
   pgvector-data:

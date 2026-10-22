@@ -50,16 +50,34 @@ The database is the `pgvector` service in `compose.yaml`.
 
 Data is kept in the `pgvector-data` volume.
 
+## word-frequency
+
+The long-running service lives in `word-frequency/`. It will keep how often the writer moves from one character to the next inside a word, and it will store those frequencies in the pgvector database. The service states that purpose and already depends on Spring Boot 4.1.2, Java 25, Lombok, and the PostgreSQL JDBC driver. Its own notes are in [word-frequency/README.md](word-frequency/README.md).
+
+The service listens on [http://localhost:8080](http://localhost:8080). From another Compose service it is `http://word-frequency:8080`.
+
 ## Run
 
-Start the store:
+Start the store and the service:
 
 ```bash
-docker compose up
+docker compose up --build
 ```
 
 ## Licence
 
 This project is Apache-2.0. The full terms are in [LICENSE](LICENSE).
 
-The `pgvector/pgvector:0.8.6-pg17` image and PostgreSQL 17 use the PostgreSQL License. That image is the store for the typing profile. Other tools added to this project must be MIT or Apache-2.0.
+| Tool | Version | Licence |
+| --- | --- | --- |
+| KeyboardStatisticLogin | 0.1.0 | Apache-2.0 |
+| Spring Boot | 4.1.2 | Apache-2.0 |
+| Lombok | from Spring Boot | MIT |
+| HikariCP and Tomcat | from Spring Boot | Apache-2.0 |
+| PostgreSQL JDBC | from Spring Boot | BSD-2-Clause |
+| pgvector image `pgvector/pgvector` | 0.8.6-pg17 | PostgreSQL License |
+| PostgreSQL | 17, in that image | PostgreSQL License |
+| Maven, used only to build the image | 3.9.16 | Apache-2.0 |
+| Eclipse Temurin | 25 | GPL-2.0 with the Classpath Exception |
+
+The PostgreSQL JDBC driver, the pgvector image, and Temurin are recorded here because the typing profile needs that store and that Java runtime. Further tools added to this project must be MIT or Apache-2.0.
