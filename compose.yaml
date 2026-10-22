@@ -1,0 +1,21 @@
+services:
+  # pgvector image and PostgreSQL 17 use the PostgreSQL License.
+  pgvector:
+    image: pgvector/pgvector:0.8.6-pg17
+    environment:
+      POSTGRES_DB: keyboardstatisticlogin
+      POSTGRES_USER: keyboardstatisticlogin
+      POSTGRES_PASSWORD: keyboardstatisticlogin
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgvector-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keyboardstatisticlogin -d keyboardstatisticlogin"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  pgvector-data:

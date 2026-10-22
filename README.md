@@ -37,8 +37,29 @@ A match needs more than the right spelling. The pace between characters, the fre
 
 The profile lives in PostgreSQL. pgvector holds the vectors and supports the similarity check used at sign-in. Observations are inserted as the person types, and existing vectors are updated in place.
 
+The database is the `pgvector` service in `compose.yaml`.
+
+| | |
+| --- | --- |
+| Image | `pgvector/pgvector:0.8.6-pg17` |
+| Host | `localhost:5432` |
+| From another Compose service | `postgresql://pgvector:5432/keyboardstatisticlogin` |
+| Database | `keyboardstatisticlogin` |
+| User | `keyboardstatisticlogin` |
+| Password | `keyboardstatisticlogin` |
+
+Data is kept in the `pgvector-data` volume.
+
+## Run
+
+Start the store:
+
+```bash
+docker compose up
+```
+
 ## Licence
 
 This project is Apache-2.0. The full terms are in [LICENSE](LICENSE).
 
-pgvector and PostgreSQL are named here because the profile is stored there. Both use the PostgreSQL License, which is the same exception recorded for pgvector in related nordlyse work. Other tools added to this project must be MIT or Apache-2.0.
+The `pgvector/pgvector:0.8.6-pg17` image and PostgreSQL 17 use the PostgreSQL License. That image is the store for the typing profile. Other tools added to this project must be MIT or Apache-2.0.
