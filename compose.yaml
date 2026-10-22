@@ -29,5 +29,10 @@ services:
       pgvector:
         condition: service_healthy
 
+  login-web:
+    build: ./login-web
+    ports:
+      - "8081:80"
+
 volumes:
   pgvector-data:

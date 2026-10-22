@@ -56,9 +56,15 @@ The long-running service lives in `word-frequency/`. It will keep how often the 
 
 The service listens on [http://localhost:8080](http://localhost:8080). From another Compose service it is `http://word-frequency:8080`.
 
+## login-web
+
+The sign-in page lives in `login-web/`. Apache HTTP Server 2.4.69 serves it from the image, with no install step at start. The page will send a typed word to `word-frequency`. The sign-in form comes in a later change. Notes are in [login-web/README.md](login-web/README.md).
+
+Open the page at [http://localhost:8081](http://localhost:8081). From another Compose service it is `http://login-web:80`.
+
 ## Run
 
-Start the store and the service:
+Start the store, the service, and the page:
 
 ```bash
 docker compose up --build
@@ -79,5 +85,7 @@ This project is Apache-2.0. The full terms are in [LICENSE](LICENSE).
 | PostgreSQL | 17, in that image | PostgreSQL License |
 | Maven, used only to build the image | 3.9.16 | Apache-2.0 |
 | Eclipse Temurin | 25 | GPL-2.0 with the Classpath Exception |
+| Apache HTTP Server | 2.4.69 | Apache-2.0 |
+| Alpine | 3.24, base of the httpd image | musl is MIT; BusyBox in the base is GPL-2.0 |
 
-The PostgreSQL JDBC driver, the pgvector image, and Temurin are recorded here because the typing profile needs that store and that Java runtime. Further tools added to this project must be MIT or Apache-2.0.
+The PostgreSQL JDBC driver, the pgvector image, and Temurin are recorded here because the typing profile needs that store and that Java runtime. Apache HTTP Server is Apache-2.0. Its Alpine base is recorded because that image is the fast page runtime. Further tools added to this project must be MIT or Apache-2.0.
