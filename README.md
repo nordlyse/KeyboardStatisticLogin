@@ -89,5 +89,6 @@ This project is Apache-2.0. The full terms are in [LICENSE](LICENSE).
 | Alpine | 3.24, base of the httpd image | musl is MIT; BusyBox in the base is GPL-2.0 |
 | JUnit Jupiter, tests only | from Spring Boot | EPL-2.0 |
 | Spring Boot web MVC test | from Spring Boot | Apache-2.0 |
+| Testcontainers | 2.0.5, tests only | MIT |
 
 The PostgreSQL JDBC driver, the pgvector image, and Temurin are recorded here because the typing profile needs that store and that Java runtime. Apache HTTP Server is Apache-2.0. Its Alpine base is recorded because that image is the fast page runtime. Further tools added to this project must be MIT or Apache-2.0.
