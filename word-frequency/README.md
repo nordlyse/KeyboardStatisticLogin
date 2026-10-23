@@ -1,14 +1,26 @@
 # word-frequency
 
-`word-frequency` is the long-running Spring Boot service for KeyboardStatisticLogin. It stays up beside the pgvector database and is the place that will keep the letter frequencies.
+`word-frequency` is the long-running Spring Boot service for KeyboardStatisticLogin. It stays up beside the pgvector database and keeps the letter-transition analysis.
 
 ## Purpose
 
-While a person types, each word is a sequence of characters. This service will follow the step from one character to the next inside that word and keep how often that step happens. For the word `login`, the steps are `l→o`, `o→g`, `g→i`, and `i→n`. Each step will record which character follows which, and how often that passage has been seen.
+Each accepted key updates every sequence length from 1 through 10 that ends on that key. Length 1 is the character itself. Length 2 is the step from the previous character to this one. A longer length holds the chain of steps inside that window, so length 10 holds nine steps across the last ten characters. Older characters fall out of the window as new ones arrive.
 
-Those frequencies will be written into the pgvector database and updated as further typing arrives. The same record is what a later sign-in can compare when a word is typed again.
+A correction, sent as `Backspace` or with `"correction": true`, raises the error count on each of those sequences. The error frequency is the error count divided by the number of times that sequence has been seen. The step times stay as a running mean of the gaps between the keys.
 
-This module states that purpose and holds the Spring Boot dependencies the recording will use.
+The counts, the error frequency, and the step means are written into a `vector(11)` column in `keystrike_ngram` and updated in place. Slot 0 is the error frequency, slot 1 is a scaled seen-count, and slots 2 through 10 are the step means in seconds. The latest ten keys are held in memory so the next chain can be formed. The stored rows remain in pgvector across a restart.
+
+## Keystrikes
+
+`POST /keystrikes` accepts one key.
+
+```bash
+curl -s -X POST http://localhost:8080/keystrikes \
+  -H 'Content-Type: application/json' \
+  -d '{"symbol":"l","pressedAt":"2026-10-23T19:00:00Z"}'
+```
+
+A following key sends the same shape. A correction sends `{"symbol":"Backspace"}` or `{"symbol":"g","correction":true}`. The second form counts that character as an error and leaves it out of the following chain. Letters are folded to lower case. The response lists the sequences updated by that key.
 
 ## Stack
 
@@ -23,6 +35,7 @@ This module states that purpose and holds the Spring Boot dependencies the recor
 | Tomcat | from the web starter | Apache-2.0 |
 | Maven, used only to build the image | 3.9.16 | Apache-2.0 |
 | Eclipse Temurin | 25 | GPL-2.0 with the Classpath Exception |
+| JUnit Jupiter, tests only | from Spring Boot | EPL-2.0 |
 
 Spring Boot 4.1.2 is the current stable release. It needs Java 17 or newer and accepts Java 25. The image build uses Temurin 25.
 

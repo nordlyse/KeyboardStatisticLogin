@@ -52,7 +52,7 @@ Data is kept in the `pgvector-data` volume.
 
 ## word-frequency
 
-The long-running service lives in `word-frequency/`. It will keep how often the writer moves from one character to the next inside a word, and it will store those frequencies in the pgvector database. The service states that purpose and already depends on Spring Boot 4.1.2, Java 25, Lombok, and the PostgreSQL JDBC driver. Its own notes are in [word-frequency/README.md](word-frequency/README.md).
+The long-running service lives in `word-frequency/`. On each key it updates sequence lengths 1 through 10, including the letter-to-letter step and the error frequency of that step, and stores the vector in pgvector. Notes and the `/keystrikes` call are in [word-frequency/README.md](word-frequency/README.md).
 
 The service listens on [http://localhost:8080](http://localhost:8080). From another Compose service it is `http://word-frequency:8080`.
 
@@ -87,5 +87,6 @@ This project is Apache-2.0. The full terms are in [LICENSE](LICENSE).
 | Eclipse Temurin | 25 | GPL-2.0 with the Classpath Exception |
 | Apache HTTP Server | 2.4.69 | Apache-2.0 |
 | Alpine | 3.24, base of the httpd image | musl is MIT; BusyBox in the base is GPL-2.0 |
+| JUnit Jupiter, tests only | from Spring Boot | EPL-2.0 |
 
 The PostgreSQL JDBC driver, the pgvector image, and Temurin are recorded here because the typing profile needs that store and that Java runtime. Apache HTTP Server is Apache-2.0. Its Alpine base is recorded because that image is the fast page runtime. Further tools added to this project must be MIT or Apache-2.0.

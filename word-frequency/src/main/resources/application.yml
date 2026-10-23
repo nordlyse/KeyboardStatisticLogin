@@ -1,10 +1,17 @@
 spring:
   application:
     name: word-frequency
+  sql:
+    init:
+      mode: always
   datasource:
     url: ${WORD_FREQUENCY_DATABASE_URL:jdbc:postgresql://localhost:5432/keyboardstatisticlogin}
     username: ${WORD_FREQUENCY_DATABASE_USERNAME:keyboardstatisticlogin}
     password: ${WORD_FREQUENCY_DATABASE_PASSWORD:keyboardstatisticlogin}
+
+keystrike:
+  max-order: 10
+  profile: local
 
 server:
   port: 8080
