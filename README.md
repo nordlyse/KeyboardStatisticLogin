@@ -1,41 +1,58 @@
 # KeyboardStatisticLogin
 
-KeyboardStatisticLogin watches how a person types and uses that record to sign them in. It follows the words they type, keeps the pace and the corrections inside each word, and stores that pattern in pgvector. A later sign-in is the same word typed again. The application compares the new typing with the stored pattern. A password is not part of the check.
+KeyboardStatisticLogin watches how a person types and keeps that rhythm for a later sign-in. Each key updates the pace and the error frequency of the character sequences that end on that key. The profile is stored in pgvector. A password is not part of the check.
+
+The sign-in page names this purpose. The form that sends typing from the browser comes in a later change. Until then, keys are posted to `word-frequency`.
 
 ## Aim
 
-The application stays on while the person types. It does not wait for a separate enrolment form. Each word adds another observation, and the stored pattern is updated from that observation.
+The service stays up while the person types. It does not wait for a separate enrolment form. Every accepted key updates the stored profile in place.
 
-Three things are kept current:
+For a key, the service keeps every sequence length from 1 through 10 that ends on that key:
 
-- How often each word is typed.
-- The step from one character to the next inside that word: which character follows which, how the step is made, and how long it takes.
-- Corrections inside the word, such as a deleted character or a character typed again.
+- Length 1 is the character itself.
+- Length 2 is the step from the previous character to this one, including how long the step took.
+- Lengths 3 through 10 hold the chain of steps inside that window. Length 10 holds nine steps across the last ten characters.
 
-When a word is offered at sign-in, the application reads the stored pace, the frequency of that word, and the corrections. A close match signs the person in.
+A correction raises the error count on each of those sequences. The error frequency is the error count divided by the number of times the sequence has been seen. Older characters fall out of the window as new ones arrive.
 
 ## What is stored
 
-Every accepted word is broken into the gaps between its characters. For the word `login`, the gaps are `l→o`, `o→g`, `g→i`, and `i→n`. Each gap records:
+Rows live in `keystrike_ngram`. The measures for one sequence are a `vector(11)`:
 
-- the character just typed and the character that follows it
-- the time spent on that step
-- whether the step includes a correction
-- how often this word, and this step, have been seen
+| Slot | Meaning |
+| --- | --- |
+| 0 | Error frequency |
+| 1 | Scaled count of how often the sequence has been seen |
+| 2–10 | Mean step time, in seconds, for up to nine gaps |
 
-Those measures are written as vectors in PostgreSQL with pgvector. A new sample does not sit beside an old one forever. The vector for that word and for each step inside it is updated, so the profile follows the person's current typing.
+Letters are folded to lower case. The latest ten keys are held in memory so the next chain can be formed. The rows themselves stay in pgvector across a restart.
 
-The same store answers a later question: given this word, typed at this pace, with these corrections, does it belong to this person?
+For the letters in `login`, the length-2 steps are `l→o`, `o→g`, `g→i`, and `i→n`. The same keystrokes also update the longer windows that end on each of those letters, up to length 10.
 
-## Sign-in
+## Services
 
-Sign-in asks for a word, not a password. The person types the word in the usual way. The application measures the same gaps, the same timing, and the same corrections, then compares that attempt with the vectors already held for the person.
+| Service | Role | From this machine | From another Compose service |
+| --- | --- | --- | --- |
+| `pgvector` | Profile store | `localhost:5432` | `pgvector:5432` |
+| `word-frequency` | Keystrike analysis | [http://localhost:8080](http://localhost:8080) | `http://word-frequency:8080` |
+| `login-web` | Sign-in page | [http://localhost:8081](http://localhost:8081) | `http://login-web:80` |
 
-A match needs more than the right spelling. The pace between characters, the frequency of the word, and the corrections have to agree with the profile. An attempt that spells the word and still types it unlike the stored profile is refused.
+`word-frequency` is a Spring Boot 4.1.2 service on Java 25, with Lombok. Its notes and the full request shape are in [word-frequency/README.md](word-frequency/README.md). The page is in [login-web/README.md](login-web/README.md).
+
+## Keystrikes
+
+`POST /keystrikes` accepts one key.
+
+```bash
+curl -s -X POST http://localhost:8080/keystrikes \
+  -H 'Content-Type: application/json' \
+  -d '{"symbol":"l","pressedAt":"2026-10-23T19:00:00Z"}'
+```
+
+A following key uses the same shape. A correction sends `{"symbol":"Backspace"}` or `{"symbol":"g","correction":true}`. The second form counts that character as an error and leaves it out of the following chain. The response lists the sequences updated by that key.
 
 ## Store
-
-The profile lives in PostgreSQL. pgvector holds the vectors and supports the similarity check used at sign-in. Observations are inserted as the person types, and existing vectors are updated in place.
 
 The database is the `pgvector` service in `compose.yaml`.
 
@@ -43,24 +60,12 @@ The database is the `pgvector` service in `compose.yaml`.
 | --- | --- |
 | Image | `pgvector/pgvector:0.8.6-pg17` |
 | Host | `localhost:5432` |
-| From another Compose service | `postgresql://pgvector:5432/keyboardstatisticlogin` |
+| From another Compose service | `jdbc:postgresql://pgvector:5432/keyboardstatisticlogin` |
 | Database | `keyboardstatisticlogin` |
 | User | `keyboardstatisticlogin` |
 | Password | `keyboardstatisticlogin` |
 
-Data is kept in the `pgvector-data` volume.
-
-## word-frequency
-
-The long-running service lives in `word-frequency/`. On each key it updates sequence lengths 1 through 10, including the letter-to-letter step and the error frequency of that step, and stores the vector in pgvector. Notes and the `/keystrikes` call are in [word-frequency/README.md](word-frequency/README.md).
-
-The service listens on [http://localhost:8080](http://localhost:8080). From another Compose service it is `http://word-frequency:8080`.
-
-## login-web
-
-The sign-in page lives in `login-web/`. Apache HTTP Server 2.4.69 serves it from the image, with no install step at start. The page will send a typed word to `word-frequency`. The sign-in form comes in a later change. Notes are in [login-web/README.md](login-web/README.md).
-
-Open the page at [http://localhost:8081](http://localhost:8081). From another Compose service it is `http://login-web:80`.
+Data is kept in the `pgvector-data` volume. The service adds the `vector` extension and the `keystrike_ngram` table when it starts.
 
 ## Run
 
@@ -69,6 +74,14 @@ Start the store, the service, and the page:
 ```bash
 docker compose up --build
 ```
+
+The `word-frequency` tests cover the analysis, the controller, and the pgvector store. From `word-frequency/`:
+
+```bash
+mvn test
+```
+
+The store test starts `pgvector/pgvector:0.8.6-pg17` through Testcontainers, so a Docker daemon has to be available.
 
 ## Licence
 
