@@ -7,10 +7,7 @@ import static org.assertj.core.api.Assertions.offset;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
@@ -124,26 +121,5 @@ class KeystrikeAnalysisTest {
                 .filter(row -> row.orderSize() == orderSize)
                 .findFirst()
                 .orElseThrow();
-    }
-
-    private static final class MemoryNgramTransitionStore implements NgramTransitionStore {
-
-        private final Map<String, StoredNgram> rows = new HashMap<>();
-
-        @Override
-        public Optional<NgramTransition> apply(NgramUpdate update) {
-            String key = update.orderSize() + "\n" + update.sequence();
-            StoredNgram next = NgramAccumulator.apply(rows.get(key), update);
-            if (next == null) {
-                return Optional.empty();
-            }
-            rows.put(key, next);
-            return Optional.of(next.transition());
-        }
-
-        private Optional<NgramTransition> current(int orderSize, String sequence) {
-            StoredNgram stored = rows.get(orderSize + "\n" + sequence);
-            return stored == null ? Optional.empty() : Optional.of(stored.transition());
-        }
     }
 }

@@ -36,6 +36,7 @@ A following key sends the same shape. A correction sends `{"symbol":"Backspace"}
 | Maven, used only to build the image | 3.9.16 | Apache-2.0 |
 | Eclipse Temurin | 25 | GPL-2.0 with the Classpath Exception |
 | JUnit Jupiter, tests only | from Spring Boot | EPL-2.0 |
+| Spring Boot web MVC test | from Spring Boot | Apache-2.0 |
 
 Spring Boot 4.1.2 is the current stable release. It needs Java 17 or newer and accepts Java 25. The image build uses Temurin 25.
 
