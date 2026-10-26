@@ -62,6 +62,19 @@ class KeystrikeMatcherTest {
     }
 
     @Test
+    void acceptsARearrangedLineOfKnownWords() {
+        train("silver", 100);
+        train("notebook", 100);
+
+        MatchReport report = matcher.score(attempt("silver notebook", 100));
+
+        assertThat(report.aligned()).isTrue();
+        assertThat(report.scored()).isTrue();
+        assertThat(report.accepted()).isTrue();
+        assertThat(report.matchPercent()).isGreaterThan(KeystrikeMatcher.ACCEPT_ABOVE);
+    }
+
+    @Test
     void refusesASentenceThatIsNotTheShownOne() {
         train("a cat", 100);
 

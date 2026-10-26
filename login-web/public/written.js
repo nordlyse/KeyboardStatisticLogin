@@ -38,8 +38,29 @@
     return found;
   }
 
+  function leadWord(word, language) {
+    const chars = Array.from(word);
+    chars[0] = chars[0].toLocaleUpperCase(language);
+    return chars.join("");
+  }
+
+  function line(language) {
+    const pool = words(language);
+    if (pool.length === 0) {
+      return "";
+    }
+    const count = 6 + Math.floor(Math.random() * 5);
+    const picked = [];
+    for (let index = 0; index < count; index += 1) {
+      picked.push(pool[Math.floor(Math.random() * pool.length)]);
+    }
+    picked[0] = leadWord(picked[0], language);
+    return picked.join(" ") + ".";
+  }
+
   window.WrittenLines = {
     remember: remember,
-    words: words
+    words: words,
+    line: line
   };
 })();

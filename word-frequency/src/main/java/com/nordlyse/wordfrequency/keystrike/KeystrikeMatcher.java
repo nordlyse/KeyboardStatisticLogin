@@ -40,8 +40,11 @@ public class KeystrikeMatcher {
         double total = 0;
         int compared = 0;
         for (int end = 1; end < kept.size(); end++) {
-            total += pairScore(kept, end);
-            compared++;
+            Optional<Double> pair = pairScore(kept, end);
+            if (pair.isPresent()) {
+                total += pair.get();
+                compared++;
+            }
             int longest = Math.min(NgramAccumulator.MAX_ORDER, end + 1);
             for (int order = 3; order <= longest; order++) {
                 Optional<NgramTransition> stored = store.find(order, sequence(kept, end, order));
@@ -51,6 +54,10 @@ public class KeystrikeMatcher {
                 total += timingScore(steps(kept, end, order), stored.get().stepMillis());
                 compared++;
             }
+        }
+        if (compared == 0) {
+            log.info("Scored a sentence at {} percent", 0.0);
+            return new MatchReport(true, true, 0, false, true);
         }
         double shown = Math.round((100.0 * total / compared) * 10.0) / 10.0;
         log.info("Scored a sentence at {} percent", shown);
@@ -92,12 +99,12 @@ public class KeystrikeMatcher {
         return kept;
     }
 
-    private double pairScore(List<Tick> kept, int end) {
+    private Optional<Double> pairScore(List<Tick> kept, int end) {
         Optional<NgramTransition> stored = store.find(2, sequence(kept, end, 2));
         if (stored.isEmpty() || stored.get().seenCount() == 0 || stored.get().stepMillis().length == 0) {
-            return 0;
+            return Optional.empty();
         }
-        return closeness(steps(kept, end, 2)[0], stored.get().stepMillis()[0]);
+        return Optional.of(closeness(steps(kept, end, 2)[0], stored.get().stepMillis()[0]));
     }
 
     private static double timingScore(double[] samples, double[] means) {
