@@ -24,7 +24,7 @@ A following key sends the same shape. A correction sends `{"symbol":"Backspace"}
 
 ## Match
 
-`GET /matches` reports whether any typing has been stored. `POST /matches` compares one sentence with that profile and does not write the sentence back. The body is `{ "sentence": "A calm river.", "keys": [ { "symbol": "A", "pressedAt": "2026-10-26T10:00:00Z" } ] }`. The response includes `ready`, `scored`, `matchPercent`, `accepted`, and `aligned`. `aligned` is true when the typed keys spell `sentence`. The pace is scored only then. `accepted` is true only when that percent is above 95. Letter-to-letter steps are always compared. Longer windows count only when that exact sequence is already in the profile. A step within 35% of the stored mean, and at least 40 milliseconds, counts as a full match.
+`GET /matches` reports whether any typing has been stored. `POST /matches` compares one shown word or line with that profile and does not write it back. The sign-in page sends one word from a line the person already typed. The body is `{ "sentence": "river", "keys": [ { "symbol": "r", "pressedAt": "2026-10-26T10:00:00Z" } ] }`. The response includes `ready`, `scored`, `matchPercent`, `accepted`, and `aligned`. `aligned` is true when the typed keys spell `sentence`. The pace is scored only then. `accepted` is true only when that percent is above 95. Letter-to-letter steps are always compared. Longer windows count only when that exact sequence is already in the profile. A step within 35% of the stored mean, and at least 40 milliseconds, counts as a full match.
 
 ## Stack
 

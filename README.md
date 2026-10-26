@@ -2,7 +2,7 @@
 
 KeyboardStatisticLogin watches how a person types and keeps that rhythm for a later sign-in. Each key updates the pace and the error frequency of the character sequences that end on that key. The profile is stored in pgvector. A password is not part of the check.
 
-The first page asks for a language, then shows a prepared line in that language. The person types the same line and sends it. The next line appears, and they can also write an extra line. Each letter is posted, with its time, to `word-frequency`. Sign-in is a separate page: it shows one sentence, the person types that same sentence, and the page compares that pace with the stored profile. The result stays on the page. A match above 95% is accepted. When no lines have been stored, that page asks for writing first.
+The first page asks for a language, then shows a prepared line in that language. Forty lines are available for each language. They arrive in a mixed order, and the same line can appear again. The person types the same line and sends it. The next mixed line appears, and they can also write an extra line. Each letter is posted, with its time, to `word-frequency`. Sign-in is a separate page: it shows one word from a line the person already sent, the person types that word, and the page compares that pace with the stored profile. The result stays on the page. A match above 95% is accepted. When no lines have been stored, that page asks for writing first. The switch between the two pages is at the top of each page.
 
 ## Aim
 

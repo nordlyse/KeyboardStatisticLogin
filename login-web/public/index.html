@@ -13,9 +13,13 @@
     <i></i>
   </div>
   <main class="panel passage">
+    <nav class="switch" aria-label="Pages">
+      <a class="current" href="index.html" aria-current="page">Type the lines</a>
+      <a href="sign-in.html">Sign in</a>
+    </nav>
     <p class="eyebrow">KeyboardStatisticLogin</p>
     <h1>Type the lines</h1>
-    <p class="lead">Choose a language. Type the line that appears, then send it. The next line follows. You can also write an extra line. Each letter is sent to the profile as you type. A password is not part of the check.</p>
+    <p class="lead">Choose a language. Lines appear in a mixed order, and the same line can appear again. Type the line, then send it. You can also write an extra line. Each letter is sent to the profile as you type. A password is not part of the check.</p>
     <form>
       <label for="language">Language</label>
       <select id="language" name="language">
@@ -39,12 +43,13 @@
     <h2>Lines sent</h2>
     <p class="empty" id="empty">No line sent yet.</p>
     <ul class="words" id="lines"></ul>
-    <p class="links"><a href="sign-in.html">Sign in</a></p>
   </main>
   <script src="lines.js"></script>
+  <script src="written.js"></script>
   <script src="keys.js"></script>
   <script>
     const passages = window.PreparedLines;
+    const written = window.WrittenLines;
     const language = document.querySelector("#language");
     const prompt = document.querySelector("#prompt");
     const progress = document.querySelector("#progress");
@@ -53,69 +58,73 @@
     const field = window.KeystrikeField.bind(form, { allowSpace: true });
     const list = document.querySelector("#lines");
     const empty = document.querySelector("#empty");
-    let index = 0;
+    let queue = [];
     let ownLine = false;
+    let shown = "";
 
     function currentLines() {
       return passages[language.value];
     }
 
-    function sameLine(typed, shown) {
-      return typed.trim().replace(/\s+/g, " ") === shown.trim().replace(/\s+/g, " ");
+    function mixLines(set) {
+      const mixed = set.slice();
+      for (let i = mixed.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const swap = mixed[i];
+        mixed[i] = mixed[j];
+        mixed[j] = swap;
+      }
+      const repeats = 1 + Math.floor(Math.random() * 3);
+      for (let n = 0; n < repeats; n += 1) {
+        const line = set[Math.floor(Math.random() * set.length)];
+        const at = Math.floor(Math.random() * (mixed.length + 1));
+        mixed.splice(at, 0, line);
+      }
+      return mixed;
+    }
+
+    function sameLine(typed, target) {
+      return typed.trim().replace(/\s+/g, " ") === target.trim().replace(/\s+/g, " ");
     }
 
     function showLine() {
-      const set = currentLines();
       field.word.value = "";
       if (ownLine) {
+        shown = "";
         progress.textContent = "Extra line";
         prompt.textContent = "Type any extra line. Send it when it is ready.";
-        extra.textContent = index >= set.length ? "Show the lines again" : "Back to the prepared line";
+        extra.textContent = "Back to a mixed line";
         return;
       }
-      if (index >= set.length) {
-        progress.textContent = "Prepared lines sent";
-        prompt.textContent = "Those lines are sent. Write another line, or show the prepared lines again.";
-        extra.textContent = "Show the lines again";
-        return;
+      if (queue.length === 0) {
+        queue = mixLines(currentLines());
       }
-      progress.textContent = "Line " + (index + 1) + " of " + set.length;
-      prompt.textContent = set[index];
+      shown = queue.shift();
+      progress.textContent = "Mixed line";
+      prompt.textContent = shown;
       extra.textContent = "Write an extra line";
     }
 
     language.addEventListener("change", function () {
-      index = 0;
+      queue = [];
       ownLine = false;
       showLine();
       field.setStatus("Type each letter so the pace can be read.");
     });
 
     extra.addEventListener("click", function () {
-      const set = currentLines();
-      if (ownLine) {
-        ownLine = false;
-        if (index >= set.length) {
-          index = 0;
-        }
-      } else if (index >= set.length) {
-        index = 0;
-      } else {
-        ownLine = true;
-      }
+      ownLine = !ownLine;
       showLine();
     });
 
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       const typed = field.word.value.trim();
-      const set = currentLines();
-      const prepared = !ownLine && index < set.length;
       if (typed === "") {
-        field.setStatus(prepared ? "Type the line as it is shown." : "Type a line to send it.");
+        field.setStatus(ownLine ? "Type a line to send it." : "Type the line as it is shown.");
         return;
       }
-      if (prepared && !sameLine(typed, set[index])) {
+      if (!ownLine && !sameLine(typed, shown)) {
         field.setStatus("Type the line as it is shown.");
         return;
       }
@@ -128,9 +137,7 @@
         item.textContent = typed;
         list.appendChild(item);
         empty.hidden = true;
-        if (prepared) {
-          index += 1;
-        }
+        written.remember(language.value, typed);
         ownLine = false;
         showLine();
         field.setStatus("The line was sent. The pace is now part of the profile.");

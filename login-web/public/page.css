@@ -257,20 +257,37 @@ h2 {
   border-top: 1px solid var(--line);
 }
 
-.links {
+.switch {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 18px;
+  gap: 10px;
+  margin: 0 0 22px;
 }
 
-.links a {
-  color: #9ae6d4;
+.switch a {
+  flex: 1;
+  display: block;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 650;
+  text-align: center;
   text-decoration: none;
 }
 
-.links a:hover,
-.links a:focus-visible {
-  text-decoration: underline;
+.switch a.current {
+  background: linear-gradient(115deg, #5eead4, #818cf8);
+  color: #071018;
+  border-color: transparent;
+}
+
+.switch a:hover { filter: brightness(1.08); }
+
+.switch a:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
 }
 
 @media (max-width: 640px) {
