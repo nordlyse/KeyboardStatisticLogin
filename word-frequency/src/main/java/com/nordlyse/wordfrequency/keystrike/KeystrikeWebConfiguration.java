@@ -13,5 +13,9 @@ class KeystrikeWebConfiguration implements WebMvcConfigurer {
                 .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
                 .allowedMethods("POST")
                 .allowedHeaders("Content-Type");
+        registry.addMapping("/matches")
+                .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
+                .allowedMethods("GET", "POST")
+                .allowedHeaders("Content-Type");
     }
 }

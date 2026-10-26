@@ -226,6 +226,15 @@ select {
   line-height: 1.45;
 }
 
+.status.verified { color: #9ae6d4; }
+.status.refused { color: #f5b4b4; }
+
+.notice {
+  margin: 0 0 16px;
+  color: #f3d48a;
+  line-height: 1.45;
+}
+
 h2 {
   margin: 22px 0 8px;
   font-size: 0.95rem;

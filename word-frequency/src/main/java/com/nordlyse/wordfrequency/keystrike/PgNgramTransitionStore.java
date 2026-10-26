@@ -21,7 +21,7 @@ public class PgNgramTransitionStore implements NgramTransitionStore {
     @Override
     @Transactional
     public Optional<NgramTransition> apply(NgramUpdate update) {
-        Optional<Row> loaded = load(update.orderSize(), update.sequence());
+        Optional<Row> loaded = load(update.orderSize(), update.sequence(), true);
         StoredNgram current = loaded
                 .map(row -> fromRow(update.orderSize(), update.sequence(), row))
                 .orElse(null);
@@ -41,15 +41,36 @@ public class PgNgramTransitionStore implements NgramTransitionStore {
         return Optional.of(next.transition());
     }
 
-    private Optional<Row> load(int orderSize, String sequence) {
+    @Override
+    public Optional<NgramTransition> find(int orderSize, String sequence) {
+        return load(orderSize, sequence, false)
+                .map(row -> fromRow(orderSize, sequence, row).transition());
+    }
+
+    @Override
+    public boolean hasSamples() {
+        return Boolean.TRUE.equals(jdbc.sql("""
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM keystrike_ngram
+                    WHERE profile_name = :profile
+                      AND seen_count > 0
+                )
+                """)
+                .param("profile", settings.profile())
+                .query(Boolean.class)
+                .single());
+    }
+
+    private Optional<Row> load(int orderSize, String sequence, boolean lock) {
+        String lockClause = lock ? " FOR UPDATE" : "";
         return jdbc.sql("""
                 SELECT seen_count, error_count, CAST(features AS text) AS features
                 FROM keystrike_ngram
                 WHERE profile_name = :profile
                   AND order_size = :orderSize
                   AND sequence = :sequence
-                FOR UPDATE
-                """)
+                """ + lockClause)
                 .param("profile", settings.profile())
                 .param("orderSize", orderSize)
                 .param("sequence", sequence)

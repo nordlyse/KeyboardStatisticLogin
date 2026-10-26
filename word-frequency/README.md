@@ -22,6 +22,10 @@ curl -s -X POST http://localhost:8080/keystrikes \
 
 A following key sends the same shape. A correction sends `{"symbol":"Backspace"}` or `{"symbol":"g","correction":true}`. The second form counts that character as an error and leaves it out of the following chain. Letters are folded to lower case. A single space is kept, so the step from one word to the next stays in the profile. The response lists the sequences updated by that key.
 
+## Match
+
+`GET /matches` reports whether any typing has been stored. `POST /matches` compares one sentence with that profile and does not write the sentence back. The body is `{ "keys": [ { "symbol": "a", "pressedAt": "2026-10-26T10:00:00Z" } ] }`. The response includes `ready`, `scored`, `matchPercent`, and `accepted`. `accepted` is true only when the percent is above 95. Letter-to-letter steps are always compared. Longer windows count only when that exact sequence is already in the profile. A step within 35% of the stored mean, and at least 40 milliseconds, counts as a full match.
+
 ## Stack
 
 | Tool | Version | Licence |

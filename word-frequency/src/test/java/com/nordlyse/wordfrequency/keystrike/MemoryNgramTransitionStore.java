@@ -19,8 +19,18 @@ class MemoryNgramTransitionStore implements NgramTransitionStore {
         return Optional.of(next.transition());
     }
 
-    Optional<NgramTransition> current(int orderSize, String sequence) {
+    @Override
+    public Optional<NgramTransition> find(int orderSize, String sequence) {
         StoredNgram stored = rows.get(orderSize + "\n" + sequence);
         return stored == null ? Optional.empty() : Optional.of(stored.transition());
+    }
+
+    @Override
+    public boolean hasSamples() {
+        return rows.values().stream().anyMatch(row -> row.transition().seenCount() > 0);
+    }
+
+    Optional<NgramTransition> current(int orderSize, String sequence) {
+        return find(orderSize, sequence);
     }
 }

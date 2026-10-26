@@ -1,16 +1,12 @@
 package com.nordlyse.wordfrequency.keystrike;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +23,7 @@ public class KeystrikeAnalysis {
 
     @Transactional
     public synchronized List<NgramTransition> addKeystrike(KeystrikeRequest request) {
-        ParsedKey key = parse(request);
+        KeyParser.Parsed key = KeyParser.parse(request, clock);
         ArrayDeque<KeyTick> next = new ArrayDeque<>(ticks);
         List<NgramUpdate> updates = plan(next, key);
         List<NgramTransition> saved = new ArrayList<>();
@@ -40,7 +36,7 @@ public class KeystrikeAnalysis {
         return saved;
     }
 
-    private List<NgramUpdate> plan(ArrayDeque<KeyTick> next, ParsedKey key) {
+    private List<NgramUpdate> plan(ArrayDeque<KeyTick> next, KeyParser.Parsed key) {
         if (key.undo()) {
             return undo(next);
         }
@@ -104,35 +100,6 @@ public class KeystrikeAnalysis {
             steps[index - 1] = Math.max(0, gap);
         }
         return steps;
-    }
-
-    private ParsedKey parse(KeystrikeRequest request) {
-        if (request == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A keystrike is required");
-        }
-        String raw = request.symbol() == null ? "" : request.symbol();
-        if (raw.isEmpty() || isCorrectionKey(raw.trim())) {
-            return new ParsedKey("", instant(request), true, false);
-        }
-        if (raw.codePointCount(0, raw.length()) != 1) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A keystrike symbol is a single character");
-        }
-        int codePoint = raw.codePointAt(0);
-        String symbol = new String(Character.toChars(Character.toLowerCase(codePoint)));
-        Instant pressedAt = instant(request);
-        return new ParsedKey(symbol, pressedAt, false, Boolean.TRUE.equals(request.correction()));
-    }
-
-    private Instant instant(KeystrikeRequest request) {
-        return request.pressedAt() == null ? clock.instant() : request.pressedAt();
-    }
-
-    private static boolean isCorrectionKey(String raw) {
-        String name = raw.toLowerCase(Locale.ROOT);
-        return name.equals("backspace") || name.equals("delete");
-    }
-
-    private record ParsedKey(String symbol, Instant pressedAt, boolean undo, boolean erroneous) {
     }
 
     private record KeyTick(String symbol, long pressedAtMillis) {
