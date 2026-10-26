@@ -6,7 +6,7 @@
 
 [http://localhost:8081](http://localhost:8081) is the first page. The person chooses a language, and a prepared line in that language is shown. They type the same line, then **Send line**. The next line appears. **Write an extra line** accepts a line of their own, and after the prepared lines they can keep writing. Each letter, space, and correction is posted to `http://localhost:8080/keystrikes` with the time of the key, and the profile in pgvector is updated.
 
-Sign-in is at [http://localhost:8081/sign-in.html](http://localhost:8081/sign-in.html). It asks for a sentence and sends that typing to `POST /matches`. The profile is not updated. The page shows the match percent and stays there: above 95% the sign-in is verified, and at or below 95% it is refused. When `GET /matches` reports that no profile is stored, the page asks the person to type lines first. A password is not part of the check.
+Sign-in is at [http://localhost:8081/sign-in.html](http://localhost:8081/sign-in.html). It shows one sentence in the chosen language. The person types that same sentence, and the page sends it to `POST /matches` with the sentence text. The profile is not updated, and a different sentence is not scored. The page shows the match percent and stays there: above 95% the sign-in is verified, and at or below 95% it is refused. **Another sentence** shows a different line. When `GET /matches` reports that no profile is stored, the page asks the person to type lines first. A password is not part of the check.
 
 The dark field, the moving colour, and the light that follows the pointer are original. React Bits was not added. Its licence is MIT plus the Commons Clause, which is outside the MIT and Apache-2.0 rule.
 

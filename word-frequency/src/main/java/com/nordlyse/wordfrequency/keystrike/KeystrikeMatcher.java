@@ -21,17 +21,21 @@ public class KeystrikeMatcher {
     private final Clock clock;
 
     public MatchReport profile() {
-        return new MatchReport(store.hasSamples(), false, 0, false);
+        return new MatchReport(store.hasSamples(), false, 0, false, false);
     }
 
     public MatchReport score(MatchAttempt attempt) {
         if (!store.hasSamples()) {
-            return new MatchReport(false, false, 0, false);
+            return new MatchReport(false, false, 0, false, false);
         }
         List<KeystrikeRequest> keys = attempt == null || attempt.keys() == null ? List.of() : attempt.keys();
         List<Tick> kept = keptKeys(keys);
+        String sentence = attempt == null ? null : attempt.sentence();
+        if (sentence != null && !sentence.isBlank() && !sameSentence(kept, sentence)) {
+            return new MatchReport(true, false, 0, false, false);
+        }
         if (kept.size() < 2) {
-            return new MatchReport(true, false, 0, false);
+            return new MatchReport(true, false, 0, false, true);
         }
         double total = 0;
         int compared = 0;
@@ -50,7 +54,25 @@ public class KeystrikeMatcher {
         }
         double shown = Math.round((100.0 * total / compared) * 10.0) / 10.0;
         log.info("Scored a sentence at {} percent", shown);
-        return new MatchReport(true, true, shown, shown > ACCEPT_ABOVE);
+        return new MatchReport(true, true, shown, shown > ACCEPT_ABOVE, true);
+    }
+
+    private static boolean sameSentence(List<Tick> kept, String sentence) {
+        return fold(typed(kept)).equals(fold(sentence));
+    }
+
+    private static String typed(List<Tick> kept) {
+        StringBuilder builder = new StringBuilder();
+        for (Tick tick : kept) {
+            builder.append(tick.symbol());
+        }
+        return builder.toString();
+    }
+
+    private static String fold(String text) {
+        StringBuilder builder = new StringBuilder();
+        text.codePoints().forEach(codePoint -> builder.appendCodePoint(Character.toLowerCase(codePoint)));
+        return builder.toString().trim().replaceAll("\\s+", " ");
     }
 
     private List<Tick> keptKeys(List<KeystrikeRequest> keys) {

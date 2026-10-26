@@ -64,7 +64,21 @@ class MatchControllerTest {
                 .andExpect(jsonPath("$.ready").value(true))
                 .andExpect(jsonPath("$.scored").value(true))
                 .andExpect(jsonPath("$.matchPercent").value(100.0))
-                .andExpect(jsonPath("$.accepted").value(true));
+                .andExpect(jsonPath("$.accepted").value(true))
+                .andExpect(jsonPath("$.aligned").value(true));
+
+        mockMvc.perform(post("/matches")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"sentence":"a dog","keys":[
+                                  {"symbol":"a","pressedAt":"2026-10-26T11:00:00Z"},
+                                  {"symbol":"b","pressedAt":"2026-10-26T11:00:00.100Z"}
+                                ]}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aligned").value(false))
+                .andExpect(jsonPath("$.scored").value(false))
+                .andExpect(jsonPath("$.accepted").value(false));
 
         mockMvc.perform(post("/matches")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -62,6 +62,18 @@ class KeystrikeMatcherTest {
     }
 
     @Test
+    void refusesASentenceThatIsNotTheShownOne() {
+        train("a cat", 100);
+
+        MatchReport report = matcher.score(new MatchAttempt(attempt("a cat", 100).keys(), "a dog"));
+
+        assertThat(report.ready()).isTrue();
+        assertThat(report.aligned()).isFalse();
+        assertThat(report.scored()).isFalse();
+        assertThat(report.accepted()).isFalse();
+    }
+
+    @Test
     void asksForASentenceWhenFewerThanTwoKeysRemain() {
         train("cat", 100);
 
