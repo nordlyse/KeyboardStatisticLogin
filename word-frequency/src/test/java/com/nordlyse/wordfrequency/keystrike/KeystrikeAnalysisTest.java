@@ -80,6 +80,17 @@ class KeystrikeAnalysisTest {
     }
 
     @Test
+    void keepsASpaceAsItsOwnCharacter() {
+        press("a", 0);
+        press(" ", 40);
+        List<NgramTransition> typed = press("b", 80);
+
+        assertThat(find(typed, 2).sequence()).isEqualTo(" b");
+        assertThat(find(typed, 3).sequence()).isEqualTo("a b");
+        assertThat(find(typed, 3).stepMillis()).containsExactly(40, 40);
+    }
+
+    @Test
     void foldsLetterCaseAndRejectsAMultiCharacterSymbol() {
         press("A", 0);
         List<NgramTransition> typed = press("B", 25);

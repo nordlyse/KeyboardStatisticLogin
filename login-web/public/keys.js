@@ -1,5 +1,6 @@
 (function () {
-  function bind(form) {
+  function bind(form, options) {
+    const allowSpace = Boolean(options && options.allowSpace);
     const word = form.querySelector("[data-word]");
     const panel = form.closest(".panel");
     const status = form.querySelector("[data-status]");
@@ -50,7 +51,7 @@
       if (event.isComposing || event.repeat || event.metaKey || event.ctrlKey || event.altKey) {
         return;
       }
-      if (event.key === " ") {
+      if (event.key === " " && !allowSpace) {
         event.preventDefault();
         setStatus("Add one word at a time.");
         return;

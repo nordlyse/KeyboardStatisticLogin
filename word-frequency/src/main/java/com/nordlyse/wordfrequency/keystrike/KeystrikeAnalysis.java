@@ -110,8 +110,8 @@ public class KeystrikeAnalysis {
         if (request == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A keystrike is required");
         }
-        String raw = request.symbol() == null ? "" : request.symbol().trim();
-        if (raw.isEmpty() || isCorrectionKey(raw)) {
+        String raw = request.symbol() == null ? "" : request.symbol();
+        if (raw.isEmpty() || isCorrectionKey(raw.trim())) {
             return new ParsedKey("", instant(request), true, false);
         }
         if (raw.codePointCount(0, raw.length()) != 1) {

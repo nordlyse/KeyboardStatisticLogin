@@ -20,7 +20,7 @@ curl -s -X POST http://localhost:8080/keystrikes \
   -d '{"symbol":"l","pressedAt":"2026-10-23T19:00:00Z"}'
 ```
 
-A following key sends the same shape. A correction sends `{"symbol":"Backspace"}` or `{"symbol":"g","correction":true}`. The second form counts that character as an error and leaves it out of the following chain. Letters are folded to lower case. The response lists the sequences updated by that key.
+A following key sends the same shape. A correction sends `{"symbol":"Backspace"}` or `{"symbol":"g","correction":true}`. The second form counts that character as an error and leaves it out of the following chain. Letters are folded to lower case. A single space is kept, so the step from one word to the next stays in the profile. The response lists the sequences updated by that key.
 
 ## Stack
 

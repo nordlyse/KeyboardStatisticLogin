@@ -4,7 +4,7 @@
 
 ## Purpose
 
-[http://localhost:8081](http://localhost:8081) is the first page. The person types their own words there. Each letter, and each correction, is posted to `http://localhost:8080/keystrikes` with the time of the key, and the profile in pgvector is updated. **Add word** keeps that word on the page and clears the field for the next one.
+[http://localhost:8081](http://localhost:8081) is the first page. The person chooses a language, and a prepared line in that language is shown. They type the same line, then **Send line**. The next line appears. **Write an extra line** accepts a line of their own, and after the prepared lines they can keep writing. Each letter, space, and correction is posted to `http://localhost:8080/keystrikes` with the time of the key, and the profile in pgvector is updated.
 
 Sign-in is at [http://localhost:8081/sign-in.html](http://localhost:8081/sign-in.html). It posts the same way. A password is not part of the check.
 
