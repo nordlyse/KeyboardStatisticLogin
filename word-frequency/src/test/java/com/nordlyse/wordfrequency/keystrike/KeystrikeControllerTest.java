@@ -1,6 +1,8 @@
 package com.nordlyse.wordfrequency.keystrike;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -17,7 +19,12 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = KeystrikeController.class)
-@Import({KeystrikeAnalysis.class, KeystrikeConfiguration.class, KeystrikeControllerTest.MemoryStoreConfiguration.class})
+@Import({
+        KeystrikeAnalysis.class,
+        KeystrikeConfiguration.class,
+        KeystrikeWebConfiguration.class,
+        KeystrikeControllerTest.MemoryStoreConfiguration.class
+})
 @TestPropertySource(properties = {"keystrike.max-order=10", "keystrike.profile=local"})
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 class KeystrikeControllerTest {
@@ -83,6 +90,16 @@ class KeystrikeControllerTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.orderSize == 2)].sequence").value("jk"));
+    }
+
+    @Test
+    void allowsTheSignInPageToPostAKey() throws Exception {
+        mockMvc.perform(options("/keystrikes")
+                        .header("Origin", "http://localhost:8081")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "Content-Type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:8081"));
     }
 
     @Test

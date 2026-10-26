@@ -4,9 +4,9 @@
 
 ## Purpose
 
-The page will ask the person to type a word. It will send that typing to `word-frequency`, and the service will compare the letter-to-letter pace with the profile in pgvector. A password is not part of the check.
+The page asks the person to type a word. Each letter, and each correction, is posted to `http://localhost:8080/keystrikes` with the time of the key. A password is not part of the check.
 
-This image serves that purpose. The sign-in form comes in a later change.
+The dark field, the moving colour, and the light that follows the pointer are original. React Bits was not added. Its licence is MIT plus the Commons Clause, which is outside the MIT and Apache-2.0 rule.
 
 ## Stack
 

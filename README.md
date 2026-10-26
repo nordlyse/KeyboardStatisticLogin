@@ -2,7 +2,7 @@
 
 KeyboardStatisticLogin watches how a person types and keeps that rhythm for a later sign-in. Each key updates the pace and the error frequency of the character sequences that end on that key. The profile is stored in pgvector. A password is not part of the check.
 
-The sign-in page names this purpose. The form that sends typing from the browser comes in a later change. Until then, keys are posted to `word-frequency`.
+The sign-in page asks for a word and posts each letter, with its time, to `word-frequency`.
 
 ## Aim
 
