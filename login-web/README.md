@@ -1,10 +1,12 @@
 # login-web
 
-`login-web` is the sign-in page for KeyboardStatisticLogin. It is a static page inside an Apache HTTP Server image, so the container starts without an install step.
+`login-web` serves the word page and the sign-in page for KeyboardStatisticLogin. Both are static pages inside an Apache HTTP Server image, so the container starts without an install step.
 
 ## Purpose
 
-The page asks the person to type a word. Each letter, and each correction, is posted to `http://localhost:8080/keystrikes` with the time of the key. A password is not part of the check.
+[http://localhost:8081](http://localhost:8081) is the first page. The person types their own words there. Each letter, and each correction, is posted to `http://localhost:8080/keystrikes` with the time of the key, and the profile in pgvector is updated. **Add word** keeps that word on the page and clears the field for the next one.
+
+Sign-in is at [http://localhost:8081/sign-in.html](http://localhost:8081/sign-in.html). It posts the same way. A password is not part of the check.
 
 The dark field, the moving colour, and the light that follows the pointer are original. React Bits was not added. Its licence is MIT plus the Commons Clause, which is outside the MIT and Apache-2.0 rule.
 

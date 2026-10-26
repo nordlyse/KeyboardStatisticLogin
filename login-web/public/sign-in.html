@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · KeyboardStatisticLogin</title>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body data-keystrike-url="http://localhost:8080/keystrikes">
+  <div class="aurora" aria-hidden="true">
+    <i></i>
+    <i></i>
+    <i></i>
+  </div>
+  <main class="panel">
+    <p class="eyebrow">KeyboardStatisticLogin</p>
+    <h1>Type a word</h1>
+    <p class="lead">The pace between the letters is the check. A password is not part of the check.</p>
+    <form>
+      <label for="word">Word</label>
+      <input id="word" name="word" type="text" data-word autocomplete="off" autocapitalize="off" spellcheck="false" autofocus>
+      <button type="submit">Sign in</button>
+      <p class="status" data-status role="status">Type each letter so the pace can be read.</p>
+    </form>
+    <p class="links"><a href="index.html">Record a word</a></p>
+  </main>
+  <script src="keys.js"></script>
+  <script>
+    const form = document.querySelector("form");
+    const field = window.KeystrikeField.bind(form);
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      if (field.word.value.trim() === "") {
+        field.setStatus("Type a word to sign in.");
+        return;
+      }
+      field.whenSettled().then(function () {
+        if (field.problem()) {
+          field.setStatus(field.problem());
+          return;
+        }
+        field.setStatus("The word was recorded. The pace is now part of the profile.");
+      });
+    });
+  </script>
+</body>
+</html>

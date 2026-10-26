@@ -2,11 +2,11 @@
 
 KeyboardStatisticLogin watches how a person types and keeps that rhythm for a later sign-in. Each key updates the pace and the error frequency of the character sequences that end on that key. The profile is stored in pgvector. A password is not part of the check.
 
-The sign-in page asks for a word and posts each letter, with its time, to `word-frequency`.
+The first page is where a person records their own words. Each letter is posted, with its time, to `word-frequency`. Sign-in uses the same path.
 
 ## Aim
 
-The service stays up while the person types. It does not wait for a separate enrolment form. Every accepted key updates the stored profile in place.
+The service stays up while the person types. The first page collects their words, and every accepted key updates the stored profile in place.
 
 For a key, the service keeps every sequence length from 1 through 10 that ends on that key:
 
@@ -36,7 +36,7 @@ For the letters in `login`, the length-2 steps are `l→o`, `o→g`, `g→i`, an
 | --- | --- | --- | --- |
 | `pgvector` | Profile store | `localhost:5432` | `pgvector:5432` |
 | `word-frequency` | Keystrike analysis | [http://localhost:8080](http://localhost:8080) | `http://word-frequency:8080` |
-| `login-web` | Sign-in page | [http://localhost:8081](http://localhost:8081) | `http://login-web:80` |
+| `login-web` | Word and sign-in pages | [http://localhost:8081](http://localhost:8081) | `http://login-web:80` |
 
 `word-frequency` is a Spring Boot 4.1.2 service on Java 25, with Lombok. Its notes and the full request shape are in [word-frequency/README.md](word-frequency/README.md). The page is in [login-web/README.md](login-web/README.md).
 

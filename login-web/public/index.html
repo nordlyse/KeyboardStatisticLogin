@@ -3,202 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in · KeyboardStatisticLogin</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --ink: #f5f7fb;
-      --muted: #b7c0d4;
-      --line: rgba(255, 255, 255, 0.16);
-      --panel: rgba(10, 12, 22, 0.72);
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      min-height: 100%;
-      background: #070812;
-      color: var(--ink);
-      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
-    }
-
-    body {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-    }
-
-    .aurora {
-      position: fixed;
-      inset: 0;
-      overflow: hidden;
-      background:
-        radial-gradient(900px 520px at 50% 115%, #14182a 0%, #070812 58%);
-      z-index: 0;
-    }
-
-    .aurora i {
-      position: absolute;
-      width: 46vw;
-      height: 46vw;
-      min-width: 280px;
-      min-height: 280px;
-      border-radius: 50%;
-      filter: blur(70px);
-      opacity: 0.72;
-    }
-
-    .aurora i:nth-child(1) {
-      left: -8%;
-      top: 8%;
-      background: #5eead4;
-      animation: drift-a 16s ease-in-out infinite alternate;
-    }
-
-    .aurora i:nth-child(2) {
-      right: -10%;
-      top: 18%;
-      background: #818cf8;
-      animation: drift-b 20s ease-in-out infinite alternate;
-    }
-
-    .aurora i:nth-child(3) {
-      left: 28%;
-      bottom: -18%;
-      background: #38bdf8;
-      animation: drift-c 18s ease-in-out infinite alternate;
-    }
-
-    @keyframes drift-a {
-      from { transform: translate3d(0, 0, 0) scale(1); }
-      to { transform: translate3d(12%, 18%, 0) scale(1.15); }
-    }
-
-    @keyframes drift-b {
-      from { transform: translate3d(0, 0, 0) scale(1.05); }
-      to { transform: translate3d(-14%, 10%, 0) scale(0.9); }
-    }
-
-    @keyframes drift-c {
-      from { transform: translate3d(0, 0, 0) scale(1); }
-      to { transform: translate3d(8%, -12%, 0) scale(1.12); }
-    }
-
-    .panel {
-      --spot-x: 50%;
-      --spot-y: 0px;
-      position: relative;
-      z-index: 1;
-      width: min(440px, 100%);
-      padding: 40px 36px 32px;
-      border-radius: 28px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(18px);
-      overflow: hidden;
-    }
-
-    .panel::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(280px circle at var(--spot-x) var(--spot-y), rgba(94, 234, 212, 0.22), transparent 42%);
-      pointer-events: none;
-    }
-
-    .panel > * { position: relative; }
-
-    .eyebrow {
-      margin: 0 0 10px;
-      color: #9ae6d4;
-      font-size: 0.78rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 0 0 12px;
-      font-size: 2.7rem;
-      line-height: 1.05;
-      letter-spacing: -0.045em;
-      background: linear-gradient(115deg, #ffffff 10%, #9ae6d4 48%, #a5b4fc 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: #f5f7fb;
-    }
-
-    @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-      h1 { color: transparent; }
-    }
-
-    .lead {
-      margin: 0 0 28px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    input {
-      width: 100%;
-      margin-bottom: 16px;
-      padding: 16px 18px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--ink);
-      font: inherit;
-      font-size: 1.15rem;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: #9ae6d4;
-      box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.16);
-    }
-
-    button {
-      width: 100%;
-      padding: 14px 18px;
-      border: 0;
-      border-radius: 14px;
-      background: linear-gradient(115deg, #5eead4, #818cf8);
-      color: #071018;
-      font: inherit;
-      font-weight: 650;
-      cursor: pointer;
-    }
-
-    button:hover { filter: brightness(1.06); }
-    button:focus-visible {
-      outline: 3px solid #ffffff;
-      outline-offset: 3px;
-    }
-
-    #status {
-      min-height: 1.4em;
-      margin: 16px 0 0;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-
-    @media (max-width: 640px) {
-      .panel { padding: 28px 20px 24px; }
-      h1 { font-size: 2.15rem; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .aurora i { animation: none; }
-    }
-  </style>
+  <title>Your words · KeyboardStatisticLogin</title>
+  <link rel="stylesheet" href="page.css">
 </head>
 <body data-keystrike-url="http://localhost:8080/keystrikes">
   <div class="aurora" aria-hidden="true">
@@ -208,99 +14,44 @@
   </div>
   <main class="panel">
     <p class="eyebrow">KeyboardStatisticLogin</p>
-    <h1>Type a word</h1>
-    <p class="lead">The pace between the letters is the check. A password is not part of the check.</p>
+    <h1>Your words</h1>
+    <p class="lead">Type the words you will use later. Each letter is sent to the profile as you type. A password is not part of the check.</p>
     <form>
       <label for="word">Word</label>
-      <input id="word" name="word" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus>
-      <button type="submit">Sign in</button>
-      <p id="status" role="status">Type each letter so the pace can be read.</p>
+      <input id="word" name="word" type="text" data-word autocomplete="off" autocapitalize="off" spellcheck="false" autofocus>
+      <button type="submit">Add word</button>
+      <p class="status" data-status role="status">Type each letter so the pace can be read.</p>
     </form>
+    <h2>Words sent</h2>
+    <p class="empty" id="empty">No word sent yet.</p>
+    <ul class="words" id="words"></ul>
+    <p class="links"><a href="sign-in.html">Sign in</a></p>
   </main>
+  <script src="keys.js"></script>
   <script>
     const form = document.querySelector("form");
-    const word = document.querySelector("#word");
-    const panel = document.querySelector(".panel");
-    const status = document.querySelector("#status");
-    const endpoint = document.body.dataset.keystrikeUrl;
-    let chain = Promise.resolve();
-    let problem = "";
-
-    function setStatus(message) {
-      status.textContent = message;
-    }
-
-    function sendKey(symbol) {
-      return fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol: symbol,
-          pressedAt: new Date().toISOString()
-        })
-      }).then(function (response) {
-        if (!response.ok) {
-          throw new Error("That key could not be recorded.");
-        }
-      }).catch(function (error) {
-        if (error instanceof TypeError) {
-          throw new Error("The word-frequency service is out of reach.");
-        }
-        throw error;
-      });
-    }
-
-    panel.addEventListener("pointermove", function (event) {
-      const bounds = panel.getBoundingClientRect();
-      panel.style.setProperty("--spot-x", (event.clientX - bounds.left) + "px");
-      panel.style.setProperty("--spot-y", (event.clientY - bounds.top) + "px");
-    });
-
-    word.addEventListener("paste", function (event) {
-      event.preventDefault();
-      setStatus("Type each letter so the pace can be read.");
-    });
-
-    word.addEventListener("drop", function (event) {
-      event.preventDefault();
-    });
-
-    word.addEventListener("keydown", function (event) {
-      if (event.isComposing || event.repeat || event.metaKey || event.ctrlKey || event.altKey) {
-        return;
-      }
-      let symbol = "";
-      if (event.key === "Backspace" || event.key === "Delete") {
-        symbol = event.key;
-      } else if (Array.from(event.key).length === 1) {
-        symbol = event.key;
-      } else {
-        return;
-      }
-      const pending = chain.then(function () {
-        return sendKey(symbol);
-      }).then(function () {
-        problem = "";
-        setStatus("Listening to the pace.");
-      }).catch(function (error) {
-        problem = error.message;
-        setStatus(problem);
-      });
-      chain = pending;
-    });
+    const field = window.KeystrikeField.bind(form);
+    const list = document.querySelector("#words");
+    const empty = document.querySelector("#empty");
 
     form.addEventListener("submit", function (event) {
       event.preventDefault();
-      if (word.value.trim() === "") {
-        setStatus("Type a word to sign in.");
+      const typed = field.word.value.trim();
+      if (typed === "") {
+        field.setStatus("Type a word to add it.");
         return;
       }
-      chain.then(function () {
-        if (problem) {
-          setStatus(problem);
+      field.whenSettled().then(function () {
+        if (field.problem()) {
+          field.setStatus(field.problem());
           return;
         }
-        setStatus("The word was recorded. The pace is now part of the profile.");
+        const item = document.createElement("li");
+        item.textContent = typed;
+        list.appendChild(item);
+        empty.hidden = true;
+        field.word.value = "";
+        field.setStatus("The word was sent. The pace is now part of the profile.");
       });
     });
   </script>
