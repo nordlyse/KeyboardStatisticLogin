@@ -1,12 +1,16 @@
 # KeyboardStatisticLogin
 
-KeyboardStatisticLogin watches how a person types and keeps that rhythm for a later sign-in. Each key updates the pace and the error frequency of the character sequences that end on that key. The profile is stored in pgvector. A password is not part of the check.
+KeyboardStatisticLogin watches how a person types and keeps that rhythm for a later check. Each key updates the pace and the error frequency of the character sequences that end on that key. The profile is stored in pgvector, one profile per account.
 
-The first page asks for a username and a password. A first visit registers that account in the database. Later visits sign in with the same account, so the lines and the typing profile continue instead of starting again. After that, the lines page asks for a language and shows a prepared line. Forty lines are available for each language. A later visit skips the lines that account already sent and shows one that is still new, in a mixed order. After those lines are sent, the next prompt is a new sentence made from the stored words. The person types the line and sends it. The next line appears, and they can also write an extra line. Each letter is posted, with its time, to `word-frequency` for that account. The sentence check is a separate page: it shows a sentence assembled from words the account already sent. The sentence does not have to mean anything. The person types that sentence, and the page compares that pace with the stored profile. The result stays on the page. A match above 95% is accepted. When no lines have been stored, that page asks for writing first. The switch between the two pages is at the top of each page.
+The first page asks for a username and a password. A first visit registers that account. The password is stored only as a hash. Later visits sign in with the same account, so the lines and the typing profile continue instead of starting again.
+
+After sign-in, the lines page asks for a language and shows a prepared line. Six languages are available, with forty lines each. A later visit skips the lines that account already sent and shows one that is still new, in a mixed order. After those lines are sent, the next prompt is a new sentence made from the stored words. The person types the line and sends it. They can also write an extra line. Each letter is posted, with its time, to `word-frequency` for that account. The same letter sequence, typed again at a different pace, updates a running mean.
+
+The sentence check is a separate page. It shows a sentence assembled from words the account already sent. The sentence does not have to mean anything, and each visit asks for a different sentence. The person types that sentence, and the page compares that pace with the stored profile. The result stays on the page. A match above 95% is accepted. When no lines have been stored, that page asks for writing first. The switch between the two pages is at the top of each page. A password is not part of this check.
 
 ## Aim
 
-The service stays up while the person types. The first page walks through prepared lines, and every accepted key updates the stored profile in place.
+The service stays up while the person types. Every accepted key updates that account's stored profile in place.
 
 For a key, the service keeps every sequence length from 1 through 10 that ends on that key:
 
@@ -18,7 +22,7 @@ A correction raises the error count on each of those sequences. The error freque
 
 ## What is stored
 
-Rows live in `keystrike_ngram`. The measures for one sequence are a `vector(11)`:
+Rows for the pace live in `keystrike_ngram`. `profile_name` is the signed-in username, so one account's rows stay apart from another's. The measures for one sequence are a `vector(11)`:
 
 | Slot | Meaning |
 | --- | --- |
@@ -26,7 +30,9 @@ Rows live in `keystrike_ngram`. The measures for one sequence are a `vector(11)`
 | 1 | Scaled count of how often the sequence has been seen |
 | 2–10 | Mean step time, in seconds, for up to nine gaps |
 
-Letters are folded to lower case. The latest ten keys are held in memory so the next chain can be formed. The rows themselves stay in pgvector across a restart.
+When the same sequence is typed again, each step time becomes the running mean of every writing of that sequence. Letters are folded to lower case. The latest ten keys for each account are held in memory so the next chain can be formed. The rows themselves stay in pgvector across a restart.
+
+The account, the session, and the sent lines live beside that table. `account` holds the username and the password hash. `account_session` holds a hash of the sign-in token. `sent_line` holds each line the account sent, with its language.
 
 For the letters in `login`, the length-2 steps are `l→o`, `o→g`, `g→i`, and `i→n`. The same keystrokes also update the longer windows that end on each of those letters, up to length 10.
 
@@ -36,17 +42,18 @@ For the letters in `login`, the length-2 steps are `l→o`, `o→g`, `g→i`, an
 | --- | --- | --- | --- |
 | `pgvector` | Profile store | `localhost:5432` | `pgvector:5432` |
 | `word-frequency` | Keystrike analysis | [http://localhost:8080](http://localhost:8080) | `http://word-frequency:8080` |
-| `login-web` | Word and sign-in pages | [http://localhost:8081](http://localhost:8081) | `http://login-web:80` |
+| `login-web` | Account, line, and sentence-check pages | [http://localhost:8081](http://localhost:8081) | `http://login-web:80` |
 
 `word-frequency` is a Spring Boot 4.1.2 service on Java 25, with Lombok. Its notes and the full request shape are in [word-frequency/README.md](word-frequency/README.md). The page is in [login-web/README.md](login-web/README.md).
 
 ## Keystrikes
 
-`POST /keystrikes` accepts one key.
+`POST /keystrikes` accepts one key for the signed-in account. A request with no valid token is refused.
 
 ```bash
 curl -s -X POST http://localhost:8080/keystrikes \
   -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer TOKEN' \
   -d '{"symbol":"l","pressedAt":"2026-10-23T19:00:00Z"}'
 ```
 
@@ -65,7 +72,7 @@ The database is the `pgvector` service in `compose.yaml`.
 | User | `keyboardstatisticlogin` |
 | Password | `keyboardstatisticlogin` |
 
-Data is kept in the `pgvector-data` volume. The service adds the `vector` extension and the `keystrike_ngram` table when it starts.
+Data is kept in the `pgvector-data` volume. The service adds the `vector` extension when it starts, then `keystrike_ngram`, `account`, `account_session`, and `sent_line`.
 
 ## Run
 
@@ -82,6 +89,12 @@ mvn test
 ```
 
 The store test starts `pgvector/pgvector:0.8.6-pg17` through Testcontainers, so a Docker daemon has to be available.
+
+The line-selection checks run from `login-web/` with Node, which is used only for tests:
+
+```bash
+node --test test/written.test.js
+```
 
 ## Licence
 
@@ -103,5 +116,6 @@ This project is Apache-2.0. The full terms are in [LICENSE](LICENSE).
 | JUnit Jupiter, tests only | from Spring Boot | EPL-2.0 |
 | Spring Boot web MVC test | from Spring Boot | Apache-2.0 |
 | Testcontainers | 2.0.5, tests only | MIT |
+| Node.js | tests only | MIT |
 
 The PostgreSQL JDBC driver, the pgvector image, and Temurin are recorded here because the typing profile needs that store and that Java runtime. Apache HTTP Server is Apache-2.0. Its Alpine base is recorded because that image is the fast page runtime. Further tools added to this project must be MIT or Apache-2.0.
