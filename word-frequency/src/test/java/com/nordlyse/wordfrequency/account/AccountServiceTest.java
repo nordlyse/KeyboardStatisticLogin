@@ -42,5 +42,52 @@ class AccountServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(error -> ((ResponseStatusException) error).getStatusCode())
                 .isEqualTo(HttpStatus.UNAUTHORIZED);
+
+        assertThatThrownBy(() -> accounts.openSession("missing", "correct horse"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(error -> ((ResponseStatusException) error).getStatusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void rejectsAShortPasswordAndAUsernameWithASpace() {
+        assertThatThrownBy(() -> accounts.addAccount("Ada", "short"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(error -> ((ResponseStatusException) error).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+
+        assertThatThrownBy(() -> accounts.addAccount("Ada Lane", "correct horse"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(error -> ((ResponseStatusException) error).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+
+        assertThat(accounts.addAccount("Ada", "eightchr")).isEqualTo("Ada");
+    }
+
+    @Test
+    void rejectsAnUnsupportedLanguageAndABlankLine() {
+        accounts.addAccount("Ada", "correct horse");
+
+        assertThatThrownBy(() -> accounts.addLine("Ada", "it", "silver notebook"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(error -> ((ResponseStatusException) error).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+
+        assertThatThrownBy(() -> accounts.addLine("Ada", "en", " "))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(error -> ((ResponseStatusException) error).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void keepsEveryLaterLine() {
+        accounts.addAccount("Ada", "correct horse");
+
+        accounts.addLine("Ada", "en", "silver notebook");
+        accounts.addLine("Ada", "en", "grey cat");
+
+        assertThat(accounts.lines("Ada")).containsExactly(
+                new SentLine("en", "silver notebook"),
+                new SentLine("en", "grey cat"));
     }
 }

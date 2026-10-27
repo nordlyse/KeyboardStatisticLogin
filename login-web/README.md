@@ -21,3 +21,11 @@ The dark field, the moving colour, and the light that follows the pointer are or
 | Alpine | 3.24, the image base | musl is MIT; BusyBox in the base is GPL-2.0 |
 
 The page is published on [http://localhost:8081](http://localhost:8081). From another Compose service it is `http://login-web:80`.
+
+## Tests
+
+The line selection checks run with Node, which is used only for tests and is MIT:
+
+```bash
+node --test test/written.test.js
+```

@@ -74,10 +74,6 @@
       return passages[language.value];
     }
 
-    function foldLine(text) {
-      return text.trim().replace(/\s+/g, " ").toLocaleLowerCase(language.value);
-    }
-
     function mixLines(set) {
       const mixed = set.slice();
       for (let i = mixed.length - 1; i > 0; i -= 1) {
@@ -90,13 +86,7 @@
     }
 
     function unseenLines(set) {
-      const sent = {};
-      written.lines(language.value).forEach(function (text) {
-        sent[foldLine(text)] = true;
-      });
-      return set.filter(function (line) {
-        return !sent[foldLine(line)];
-      });
+      return written.unseen(language.value, set);
     }
 
     function sameLine(typed, target) {

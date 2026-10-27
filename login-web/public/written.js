@@ -66,6 +66,16 @@
     return picked.join(" ") + ".";
   }
 
+  function unseen(language, prepared) {
+    const sent = {};
+    lines(language).forEach(function (text) {
+      sent[fold(text, language)] = true;
+    });
+    return prepared.filter(function (line) {
+      return !sent[fold(line, language)];
+    });
+  }
+
   function line(language, previous) {
     const pool = words(language);
     if (pool.length === 0) {
@@ -93,6 +103,7 @@
     remember: remember,
     words: words,
     lines: lines,
+    unseen: unseen,
     line: line
   };
 })();

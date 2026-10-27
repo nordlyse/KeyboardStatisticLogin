@@ -87,6 +87,34 @@ class KeystrikeMatcherTest {
     }
 
     @Test
+    void scoresTheMeanOfTwoWritingsOfTheSameWord() {
+        train("cat", 100);
+        train("cat", 300);
+
+        MatchReport atMean = matcher.score(attempt("cat", 200));
+        MatchReport atFirstPace = matcher.score(attempt("cat", 100));
+
+        assertThat(atMean.accepted()).isTrue();
+        assertThat(atMean.matchPercent()).isEqualTo(100.0);
+        assertThat(atFirstPace.accepted()).isFalse();
+    }
+
+    @Test
+    void keepsOneAccountPaceApartFromAnother() {
+        ActiveProfile.use("ada");
+        try {
+            train("cat", 100);
+            ActiveProfile.use("bee");
+            assertThat(matcher.score(attempt("cat", 100)).ready()).isFalse();
+
+            ActiveProfile.use("ada");
+            assertThat(matcher.score(attempt("cat", 100)).accepted()).isTrue();
+        } finally {
+            ActiveProfile.clear();
+        }
+    }
+
+    @Test
     void asksForASentenceWhenFewerThanTwoKeysRemain() {
         train("cat", 100);
 
