@@ -27,7 +27,7 @@
     <p class="signed-in" id="who"></p>
     <p class="eyebrow">KeyboardStatisticLogin</p>
     <h1>Type the lines</h1>
-    <p class="lead">Choose a language. Lines appear in a mixed order, and the same line can appear again. Type the line, then send it. You can also write an extra line. Each letter is stored with this account, so the next visit continues the same profile.</p>
+    <p class="lead">Choose a language. A later visit skips lines this account already sent and shows one that is still new. After those lines are sent, the next prompt is a new sentence made from the stored words. Type the line, then send it. You can also write an extra line. Each letter is stored with this account, so the next visit continues the same profile.</p>
     <form>
       <label for="language">Language</label>
       <select id="language" name="language">
@@ -74,6 +74,10 @@
       return passages[language.value];
     }
 
+    function foldLine(text) {
+      return text.trim().replace(/\s+/g, " ").toLocaleLowerCase(language.value);
+    }
+
     function mixLines(set) {
       const mixed = set.slice();
       for (let i = mixed.length - 1; i > 0; i -= 1) {
@@ -82,13 +86,17 @@
         mixed[i] = mixed[j];
         mixed[j] = swap;
       }
-      const repeats = 1 + Math.floor(Math.random() * 3);
-      for (let n = 0; n < repeats; n += 1) {
-        const line = set[Math.floor(Math.random() * set.length)];
-        const at = Math.floor(Math.random() * (mixed.length + 1));
-        mixed.splice(at, 0, line);
-      }
       return mixed;
+    }
+
+    function unseenLines(set) {
+      const sent = {};
+      written.lines(language.value).forEach(function (text) {
+        sent[foldLine(text)] = true;
+      });
+      return set.filter(function (line) {
+        return !sent[foldLine(line)];
+      });
     }
 
     function sameLine(typed, target) {
@@ -105,7 +113,15 @@
         return;
       }
       if (queue.length === 0) {
-        queue = mixLines(currentLines());
+        const fresh = unseenLines(currentLines());
+        if (fresh.length === 0) {
+          shown = written.line(language.value, shown);
+          progress.textContent = "New line";
+          prompt.textContent = shown;
+          extra.textContent = "Write an extra line";
+          return;
+        }
+        queue = mixLines(fresh);
       }
       shown = queue.shift();
       progress.textContent = "Mixed line";

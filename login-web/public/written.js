@@ -42,18 +42,22 @@
     return found;
   }
 
+  function lines(language) {
+    const stored = cache[language];
+    return Array.isArray(stored) ? stored.slice() : [];
+  }
+
+  function fold(text, language) {
+    return String(text).trim().replace(/\s+/g, " ").toLocaleLowerCase(language);
+  }
+
   function leadWord(word, language) {
     const chars = Array.from(word);
     chars[0] = chars[0].toLocaleUpperCase(language);
     return chars.join("");
   }
 
-  function line(language) {
-    const pool = words(language);
-    if (pool.length === 0) {
-      return "";
-    }
-    const count = 6 + Math.floor(Math.random() * 5);
+  function assemble(pool, language, count) {
     const picked = [];
     for (let index = 0; index < count; index += 1) {
       picked.push(pool[Math.floor(Math.random() * pool.length)]);
@@ -62,10 +66,33 @@
     return picked.join(" ") + ".";
   }
 
+  function line(language, previous) {
+    const pool = words(language);
+    if (pool.length === 0) {
+      return "";
+    }
+    const sent = {};
+    lines(language).forEach(function (text) {
+      sent[fold(text, language)] = true;
+    });
+    const prior = previous ? fold(previous, language) : "";
+    let built = "";
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const count = 6 + ((Math.floor(Math.random() * 5) + attempt) % 5);
+      built = assemble(pool, language, count);
+      const folded = fold(built, language);
+      if (folded !== prior && !sent[folded]) {
+        return built;
+      }
+    }
+    return built;
+  }
+
   window.WrittenLines = {
     load: load,
     remember: remember,
     words: words,
+    lines: lines,
     line: line
   };
 })();

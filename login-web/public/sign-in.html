@@ -96,7 +96,7 @@
     function pickSentence() {
       resetAttempt();
       refreshNotice();
-      shown = written.line(language.value);
+      shown = written.line(language.value, shown);
       if (shown === "") {
         prompt.textContent = "";
         attempt.hidden = true;
