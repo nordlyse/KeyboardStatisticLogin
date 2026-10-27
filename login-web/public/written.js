@@ -1,28 +1,32 @@
 (function () {
-  const storageKey = "keyboardstatisticlogin.lines";
+  let cache = {};
 
-  function read() {
-    try {
-      const value = JSON.parse(localStorage.getItem(storageKey));
-      if (value && typeof value === "object") {
-        return value;
-      }
-    } catch (error) {
-      return {};
-    }
-    return {};
+  function load(lines) {
+    cache = {};
+    lines.forEach(function (line) {
+      const language = line.language;
+      const stored = cache[language] || [];
+      stored.push(line.text);
+      cache[language] = stored;
+    });
   }
 
   function remember(language, line) {
-    const store = read();
-    const lines = Array.isArray(store[language]) ? store[language].slice() : [];
-    lines.push(line);
-    store[language] = lines;
-    localStorage.setItem(storageKey, JSON.stringify(store));
+    return window.AccountSession.authFetch(window.AccountSession.base() + "/lines", {
+      method: "POST",
+      body: JSON.stringify({ language: language, text: line })
+    }).then(function (response) {
+      if (!response.ok) {
+        throw new Error("That line could not be stored.");
+      }
+      const stored = cache[language] ? cache[language].slice() : [];
+      stored.push(line);
+      cache[language] = stored;
+    });
   }
 
   function words(language) {
-    const lines = read()[language];
+    const lines = cache[language];
     const found = [];
     if (!Array.isArray(lines)) {
       return found;
@@ -59,6 +63,7 @@
   }
 
   window.WrittenLines = {
+    load: load,
     remember: remember,
     words: words,
     line: line

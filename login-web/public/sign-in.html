@@ -3,10 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in · KeyboardStatisticLogin</title>
+  <title>Check a sentence · KeyboardStatisticLogin</title>
   <link rel="stylesheet" href="page.css">
+  <script src="session.js"></script>
+  <script>
+    if (!window.AccountSession.token()) {
+      window.location.replace("account.html");
+    }
+  </script>
 </head>
-<body data-match-url="http://localhost:8080/matches">
+<body data-account-url="http://localhost:8080" data-match-url="http://localhost:8080/matches">
   <div class="aurora" aria-hidden="true">
     <i></i>
     <i></i>
@@ -15,11 +21,13 @@
   <main class="panel passage">
     <nav class="switch" aria-label="Pages">
       <a href="index.html">Type the lines</a>
-      <a class="current" href="sign-in.html" aria-current="page">Sign in</a>
+      <a class="current" href="sign-in.html" aria-current="page">Check a sentence</a>
+      <button class="quiet" id="sign-out" type="button">Sign out</button>
     </nav>
+    <p class="signed-in" id="who"></p>
     <p class="eyebrow">KeyboardStatisticLogin</p>
     <h1>Check a sentence</h1>
-    <p class="lead">Type the sentence shown below. It is assembled from words you already sent, and it does not have to mean anything. Its pace is compared with the stored profile. A match above 95% signs you in. A password is not part of the check.</p>
+    <p class="lead">Type the sentence shown below. It is assembled from words you already sent, and it does not have to mean anything. Its pace is compared with this account. A match above 95% is accepted. A password is not part of this check.</p>
     <p class="notice" id="notice" hidden>No line from you is stored yet. Type your lines first.</p>
     <form>
       <label for="language">Language</label>
@@ -36,7 +44,7 @@
         <label for="sentence">Sentence</label>
         <input id="sentence" name="sentence" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
         <div class="actions">
-          <button type="submit">Sign in</button>
+          <button type="submit">Check</button>
           <button class="quiet" id="another" type="button">Another sentence</button>
         </div>
       </div>
@@ -110,7 +118,7 @@
     }
 
     function readProfile() {
-      return fetch(endpoint).then(function (response) {
+      return window.AccountSession.authFetch(endpoint).then(function (response) {
         if (!response.ok) {
           throw new Error("The word-frequency service is out of reach.");
         }
@@ -140,10 +148,10 @@
       }
       const percent = Number(report.matchPercent).toFixed(1);
       if (report.accepted) {
-        setStatus("Sign-in verified at " + percent + "%.", "verified");
+        setStatus("Match accepted at " + percent + "%.", "verified");
         return;
       }
-      setStatus("Sign-in refused at " + percent + "%.", "refused");
+      setStatus("Match refused at " + percent + "%.", "refused");
     }
 
     panel.addEventListener("pointermove", function (event) {
@@ -199,9 +207,8 @@
         return;
       }
       chain = chain.then(function () {
-        return fetch(endpoint, {
+        return window.AccountSession.authFetch(endpoint, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sentence: shown, keys: keys })
         });
       }).then(function (response) {
@@ -218,8 +225,24 @@
       });
     });
 
-    pickSentence();
-    readProfile();
+    window.AccountSession.bindSignOut(document.querySelector("#sign-out"));
+    window.AccountSession.guard().then(function (account) {
+      document.querySelector("#who").textContent = "Signed in as " + account.username;
+      return window.AccountSession.authFetch(window.AccountSession.base() + "/lines");
+    }).then(function (response) {
+      if (!response.ok) {
+        throw new Error("The saved lines could not be read.");
+      }
+      return response.json();
+    }).then(function (lines) {
+      written.load(lines);
+      pickSentence();
+      return readProfile();
+    }).catch(function (error) {
+      if (error.message !== "Sign in again.") {
+        setStatus(error.message);
+      }
+    });
   </script>
 </body>
 </html>

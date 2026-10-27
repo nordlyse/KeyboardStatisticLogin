@@ -8,15 +8,20 @@ Each accepted key updates every sequence length from 1 through 10 that ends on t
 
 A correction, sent as `Backspace` or with `"correction": true`, raises the error count on each of those sequences. The error frequency is the error count divided by the number of times that sequence has been seen. The step times stay as a running mean of the gaps between the keys.
 
-The counts, the error frequency, and the step means are written into a `vector(11)` column in `keystrike_ngram` and updated in place. Slot 0 is the error frequency, slot 1 is a scaled seen-count, and slots 2 through 10 are the step means in seconds. The latest ten keys are held in memory so the next chain can be formed. The stored rows remain in pgvector across a restart.
+The counts, the error frequency, and the step means are written into a `vector(11)` column in `keystrike_ngram` and updated in place. Slot 0 is the error frequency, slot 1 is a scaled seen-count, and slots 2 through 10 are the step means in seconds. The latest ten keys for each account are held in memory so the next chain can be formed. The stored rows remain in pgvector across a restart. `profile_name` is the signed-in username.
+
+## Account
+
+`POST /accounts` registers `{ "username", "password" }`. The password is stored as a PBKDF2-SHA256 hash. `POST /sessions` checks that pair and returns a token. Later requests send `Authorization: Bearer <token>`. `GET /sessions` reads the current account. `DELETE /sessions` closes it. `GET /lines` and `POST /lines` keep the lines the account sent, as `{ "language", "text" }`. `/keystrikes`, `/matches`, and `/lines` refuse a request with no valid token.
 
 ## Keystrikes
 
-`POST /keystrikes` accepts one key.
+`POST /keystrikes` accepts one key for the signed-in account.
 
 ```bash
 curl -s -X POST http://localhost:8080/keystrikes \
   -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer TOKEN' \
   -d '{"symbol":"l","pressedAt":"2026-10-23T19:00:00Z"}'
 ```
 

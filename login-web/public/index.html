@@ -5,8 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Your lines · KeyboardStatisticLogin</title>
   <link rel="stylesheet" href="page.css">
+  <script src="session.js"></script>
+  <script>
+    if (!window.AccountSession.token()) {
+      window.location.replace("account.html");
+    }
+  </script>
 </head>
-<body data-keystrike-url="http://localhost:8080/keystrikes">
+<body data-account-url="http://localhost:8080" data-keystrike-url="http://localhost:8080/keystrikes">
   <div class="aurora" aria-hidden="true">
     <i></i>
     <i></i>
@@ -15,11 +21,13 @@
   <main class="panel passage">
     <nav class="switch" aria-label="Pages">
       <a class="current" href="index.html" aria-current="page">Type the lines</a>
-      <a href="sign-in.html">Sign in</a>
+      <a href="sign-in.html">Check a sentence</a>
+      <button class="quiet" id="sign-out" type="button">Sign out</button>
     </nav>
+    <p class="signed-in" id="who"></p>
     <p class="eyebrow">KeyboardStatisticLogin</p>
     <h1>Type the lines</h1>
-    <p class="lead">Choose a language. Lines appear in a mixed order, and the same line can appear again. Type the line, then send it. You can also write an extra line. Each letter is sent to the profile as you type. A password is not part of the check.</p>
+    <p class="lead">Choose a language. Lines appear in a mixed order, and the same line can appear again. Type the line, then send it. You can also write an extra line. Each letter is stored with this account, so the next visit continues the same profile.</p>
     <form>
       <label for="language">Language</label>
       <select id="language" name="language">
@@ -133,18 +141,47 @@
           field.setStatus(field.problem());
           return;
         }
-        const item = document.createElement("li");
-        item.textContent = typed;
-        list.appendChild(item);
-        empty.hidden = true;
-        written.remember(language.value, typed);
-        ownLine = false;
-        showLine();
-        field.setStatus("The line was sent. The pace is now part of the profile.");
+        return written.remember(language.value, typed).then(function () {
+          const item = document.createElement("li");
+          item.textContent = typed;
+          list.appendChild(item);
+          empty.hidden = true;
+          ownLine = false;
+          showLine();
+          field.setStatus("The line was sent. The pace is now part of the profile.");
+        });
+      }).catch(function (error) {
+        field.setStatus(error.message);
       });
     });
 
-    showLine();
+    function renderSaved(lines) {
+      lines.forEach(function (line) {
+        const item = document.createElement("li");
+        item.textContent = line.text;
+        list.appendChild(item);
+        empty.hidden = true;
+      });
+    }
+
+    window.AccountSession.bindSignOut(document.querySelector("#sign-out"));
+    window.AccountSession.guard().then(function (account) {
+      document.querySelector("#who").textContent = "Signed in as " + account.username;
+      return window.AccountSession.authFetch(window.AccountSession.base() + "/lines");
+    }).then(function (response) {
+      if (!response.ok) {
+        throw new Error("The saved lines could not be read.");
+      }
+      return response.json();
+    }).then(function (lines) {
+      written.load(lines);
+      renderSaved(lines);
+      showLine();
+    }).catch(function (error) {
+      if (error.message !== "Sign in again.") {
+        field.setStatus(error.message);
+      }
+    });
   </script>
 </body>
 </html>

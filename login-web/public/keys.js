@@ -13,9 +13,13 @@
     }
 
     function sendKey(symbol) {
-      return fetch(endpoint, {
+      const send = window.AccountSession ? window.AccountSession.authFetch : fetch;
+      const headers = window.AccountSession
+          ? window.AccountSession.headers()
+          : { "Content-Type": "application/json" };
+      return send(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: headers,
         body: JSON.stringify({
           symbol: symbol,
           pressedAt: new Date().toISOString()

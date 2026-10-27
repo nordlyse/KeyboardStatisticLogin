@@ -12,10 +12,10 @@ class KeystrikeWebConfiguration implements WebMvcConfigurer {
         registry.addMapping("/keystrikes")
                 .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
                 .allowedMethods("POST")
-                .allowedHeaders("Content-Type");
+                .allowedHeaders("Content-Type", "Authorization");
         registry.addMapping("/matches")
                 .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
                 .allowedMethods("GET", "POST")
-                .allowedHeaders("Content-Type");
+                .allowedHeaders("Content-Type", "Authorization");
     }
 }

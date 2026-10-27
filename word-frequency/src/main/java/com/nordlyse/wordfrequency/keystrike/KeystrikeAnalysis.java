@@ -3,7 +3,9 @@ package com.nordlyse.wordfrequency.keystrike;
 import java.time.Clock;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,11 +21,13 @@ public class KeystrikeAnalysis {
     private final NgramTransitionStore store;
     private final KeystrikeSettings settings;
     private final Clock clock;
-    private final ArrayDeque<KeyTick> ticks = new ArrayDeque<>();
+    private final Map<String, ArrayDeque<KeyTick>> windows = new HashMap<>();
 
     @Transactional
     public synchronized List<NgramTransition> addKeystrike(KeystrikeRequest request) {
         KeyParser.Parsed key = KeyParser.parse(request, clock);
+        String profile = ActiveProfile.orElse(settings.profile());
+        ArrayDeque<KeyTick> ticks = windows.computeIfAbsent(profile, ignored -> new ArrayDeque<>());
         ArrayDeque<KeyTick> next = new ArrayDeque<>(ticks);
         List<NgramUpdate> updates = plan(next, key);
         List<NgramTransition> saved = new ArrayList<>();

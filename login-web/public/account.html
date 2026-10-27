@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · KeyboardStatisticLogin</title>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body data-account-url="http://localhost:8080">
+  <div class="aurora" aria-hidden="true">
+    <i></i>
+    <i></i>
+    <i></i>
+  </div>
+  <main class="panel">
+    <p class="eyebrow">KeyboardStatisticLogin</p>
+    <h1>Sign in</h1>
+    <p class="lead">Enter your username and password. On a first visit, register with those same fields. The account, the lines, and the typing profile stay in the database for the next visit.</p>
+    <form>
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" autofocus>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password">
+      <div class="actions">
+        <button type="submit">Sign in</button>
+        <button class="quiet" id="register" type="button">Register</button>
+      </div>
+      <p class="status" id="status" role="status">Sign in, or register if this is your first visit.</p>
+    </form>
+  </main>
+  <script src="session.js"></script>
+  <script>
+    const form = document.querySelector("form");
+    const username = document.querySelector("#username");
+    const password = document.querySelector("#password");
+    const register = document.querySelector("#register");
+    const status = document.querySelector("#status");
+    const session = window.AccountSession;
+
+    function setStatus(message) {
+      status.textContent = message;
+    }
+
+    function body() {
+      return JSON.stringify({
+        username: username.value.trim(),
+        password: password.value
+      });
+    }
+
+    function post(path) {
+      return fetch(session.base() + path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body()
+      });
+    }
+
+    function enter() {
+      return post("/sessions").then(function (response) {
+        if (response.status === 401) {
+          throw new Error("That username or password does not match. Register if this is your first visit.");
+        }
+        if (!response.ok) {
+          throw new Error("Sign in could not be completed.");
+        }
+        return response.json();
+      }).then(function (opened) {
+        session.keep(opened.token, opened.username);
+        window.location.replace("index.html");
+      });
+    }
+
+    function fail(error) {
+      if (error instanceof TypeError) {
+        setStatus("The word-frequency service is out of reach.");
+        return;
+      }
+      setStatus(error.message);
+    }
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      if (username.value.trim() === "" || password.value === "") {
+        setStatus("Enter a username and a password.");
+        return;
+      }
+      enter().catch(fail);
+    });
+
+    register.addEventListener("click", function () {
+      if (username.value.trim() === "" || password.value === "") {
+        setStatus("Enter a username and a password.");
+        return;
+      }
+      post("/accounts").then(function (response) {
+        if (response.status === 409) {
+          throw new Error("That username is already registered. Sign in instead.");
+        }
+        if (response.status === 400) {
+          throw new Error("Use a username of letters or digits, and a password of at least 8 characters.");
+        }
+        if (!response.ok) {
+          throw new Error("Registration could not be completed.");
+        }
+        return enter();
+      }).catch(fail);
+    });
+
+    if (session.token()) {
+      session.guard().then(function () {
+        window.location.replace("index.html");
+      }).catch(function () {
+        setStatus("Sign in, or register if this is your first visit.");
+      });
+    }
+  </script>
+</body>
+</html>

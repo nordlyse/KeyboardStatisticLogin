@@ -115,6 +115,20 @@ class KeystrikeAnalysisTest {
         assertThat(corrected.features()[NgramAccumulator.STEP_ORIGIN]).isCloseTo(0.2f, offset(0.0001f));
     }
 
+    @Test
+    void keepsEachProfileWindowApart() {
+        ActiveProfile.use("ada");
+        try {
+            press("a", 0);
+            ActiveProfile.use("bee");
+            List<NgramTransition> second = press("b", 100);
+            assertThat(second).extracting(NgramTransition::orderSize).containsExactly(1);
+            assertThat(second.get(0).sequence()).isEqualTo("b");
+        } finally {
+            ActiveProfile.clear();
+        }
+    }
+
     private List<NgramTransition> press(String symbol, long millis) {
         return press(symbol, millis, false);
     }

@@ -57,7 +57,7 @@ public class PgNgramTransitionStore implements NgramTransitionStore {
                       AND seen_count > 0
                 )
                 """)
-                .param("profile", settings.profile())
+                .param("profile", profile())
                 .query(Boolean.class)
                 .single());
     }
@@ -71,7 +71,7 @@ public class PgNgramTransitionStore implements NgramTransitionStore {
                   AND order_size = :orderSize
                   AND sequence = :sequence
                 """ + lockClause)
-                .param("profile", settings.profile())
+                .param("profile", profile())
                 .param("orderSize", orderSize)
                 .param("sequence", sequence)
                 .query((rs, rowNumber) -> new Row(
@@ -89,7 +89,7 @@ public class PgNgramTransitionStore implements NgramTransitionStore {
                 VALUES
                     (:profile, :orderSize, :sequence, :seenCount, :errorCount, CAST(CAST(:features AS text) AS vector))
                 """)
-                .param("profile", settings.profile())
+                .param("profile", profile())
                 .param("orderSize", transition.orderSize())
                 .param("sequence", transition.sequence())
                 .param("seenCount", transition.seenCount())
@@ -109,13 +109,17 @@ public class PgNgramTransitionStore implements NgramTransitionStore {
                   AND order_size = :orderSize
                   AND sequence = :sequence
                 """)
-                .param("profile", settings.profile())
+                .param("profile", profile())
                 .param("orderSize", transition.orderSize())
                 .param("sequence", transition.sequence())
                 .param("seenCount", transition.seenCount())
                 .param("errorCount", transition.errorCount())
                 .param("features", literal(stored.features()))
                 .update();
+    }
+
+    private String profile() {
+        return ActiveProfile.orElse(settings.profile());
     }
 
     private static StoredNgram fromRow(int orderSize, String sequence, Row row) {

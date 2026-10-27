@@ -10,7 +10,7 @@ class MemoryNgramTransitionStore implements NgramTransitionStore {
 
     @Override
     public Optional<NgramTransition> apply(NgramUpdate update) {
-        String key = update.orderSize() + "\n" + update.sequence();
+        String key = key(update.orderSize(), update.sequence());
         StoredNgram next = NgramAccumulator.apply(rows.get(key), update);
         if (next == null) {
             return Optional.empty();
@@ -21,13 +21,20 @@ class MemoryNgramTransitionStore implements NgramTransitionStore {
 
     @Override
     public Optional<NgramTransition> find(int orderSize, String sequence) {
-        StoredNgram stored = rows.get(orderSize + "\n" + sequence);
+        StoredNgram stored = rows.get(key(orderSize, sequence));
         return stored == null ? Optional.empty() : Optional.of(stored.transition());
     }
 
     @Override
     public boolean hasSamples() {
-        return rows.values().stream().anyMatch(row -> row.transition().seenCount() > 0);
+        String prefix = ActiveProfile.orElse("local") + "\n";
+        return rows.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(prefix))
+                .anyMatch(entry -> entry.getValue().transition().seenCount() > 0);
+    }
+
+    private static String key(int orderSize, String sequence) {
+        return ActiveProfile.orElse("local") + "\n" + orderSize + "\n" + sequence;
     }
 
     Optional<NgramTransition> current(int orderSize, String sequence) {
