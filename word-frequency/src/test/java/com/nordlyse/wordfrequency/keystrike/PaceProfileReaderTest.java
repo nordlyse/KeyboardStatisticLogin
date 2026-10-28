@@ -80,6 +80,98 @@ class PaceProfileReaderTest {
     }
 
     @Test
+    void namesBothCrossingsInOneSentence() {
+        train("red cat nap", 100);
+
+        assertThat(profiles.read(List.of("red cat nap")).words()).containsExactly(
+                new PaceMark("d", "c", 1, 200, 0, List.of(new WordCrossing("red", "cat"))),
+                new PaceMark("t", "n", 1, 200, 0, List.of(new WordCrossing("cat", "nap"))));
+    }
+
+    @Test
+    void listsARepeatedWordPairOnce() {
+        train("cat nap", 100);
+        train("cat nap", 300);
+
+        PaceMark gap = profiles.read(List.of("cat nap", "cat nap")).words().get(0);
+
+        assertThat(gap.words()).containsExactly(new WordCrossing("cat", "nap"));
+        assertThat(gap.seenCount()).isEqualTo(2);
+        assertThat(gap.meanMillis()).isCloseTo(400, offset(0.001));
+    }
+
+    @Test
+    void stripsEdgeMarksFromTheWords() {
+        train("cat nap", 100);
+
+        PaceMark gap = profiles.read(List.of("\"(cat nap!\"")).words().get(0);
+
+        assertThat(gap.words()).containsExactly(new WordCrossing("cat", "nap"));
+    }
+
+    @Test
+    void ignoresBlankLines() {
+        train("cat nap", 100);
+        List<String> lines = new ArrayList<>();
+        lines.add(null);
+        lines.add(" ");
+        lines.add("cat nap");
+
+        assertThat(profiles.read(lines).words().get(0).words()).containsExactly(new WordCrossing("cat", "nap"));
+    }
+
+    @Test
+    void keepsSixWordPairsForOneLetterCrossing() {
+        train("cat nap", 100);
+
+        List<WordCrossing> named = profiles.read(List.of(
+                "wet nail",
+                "cat nap",
+                "sit near",
+                "fat nose",
+                "pet note",
+                "hot noon",
+                "lot nest")).words().get(0).words();
+
+        assertThat(named).containsExactly(
+                new WordCrossing("cat", "nap"),
+                new WordCrossing("fat", "nose"),
+                new WordCrossing("hot", "noon"),
+                new WordCrossing("lot", "nest"),
+                new WordCrossing("pet", "note"),
+                new WordCrossing("sit", "near"));
+    }
+
+    @Test
+    void namesATurkishWordCrossing() {
+        train("ışık altı", 90);
+
+        PaceMark gap = profiles.read(List.of("ışık altı")).words().get(0);
+
+        assertThat(gap.from()).isEqualTo("k");
+        assertThat(gap.to()).isEqualTo("a");
+        assertThat(gap.words()).containsExactly(new WordCrossing("ışık", "altı"));
+    }
+
+    @Test
+    void namesAOneLetterWord() {
+        train("I am", 80);
+
+        PaceMark gap = profiles.read(List.of("I am")).words().get(0);
+
+        assertThat(gap.from()).isEqualTo("i");
+        assertThat(gap.to()).isEqualTo("a");
+        assertThat(gap.words()).containsExactly(new WordCrossing("I", "am"));
+    }
+
+    @Test
+    void leavesADoubleSpaceUnnamed() {
+        train("cat nap", 100);
+
+        assertThat(profiles.read(List.of("cat  nap")).words().get(0).words()).isEmpty();
+    }
+
+    @Test
     void averagesALetterStepTypedTwice() {
         train("ab", 100);
         train("ab", 300);
