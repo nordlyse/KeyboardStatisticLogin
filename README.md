@@ -6,7 +6,9 @@ The first page asks for a username and a password. A first visit registers that 
 
 After sign-in, the lines page asks for a language and shows a prepared line. Six languages are available, with forty lines each. A later visit skips the lines that account already sent and shows one that is still new, in a mixed order. After those lines are sent, the next prompt is a new sentence made from the stored words. The person types the line and sends it. They can also write an extra line. Each letter is posted, with its time, to `word-frequency` for that account. The same letter sequence, typed again at a different pace, updates a running mean.
 
-The sentence check is a separate page. It shows a sentence assembled from words the account already sent. The sentence does not have to mean anything, and each visit asks for a different sentence. The person types that sentence, and the page compares that pace with the stored profile. The result stays on the page. A match above 95% is accepted. When no lines have been stored, that page asks for writing first. Statistics, just left of Sign out, draws that stored pace as a fingerprint of letter gaps and word pauses. The page switch is at the top of each page. A password is not part of the sentence check.
+The sentence check is a separate page. It shows a sentence assembled from words the account already sent. The sentence does not have to mean anything, and each visit asks for a different sentence. The person types that sentence, and the page compares that pace with the stored profile. The result stays on the page. A match above 95% is accepted. When no lines have been stored, that page asks for writing first. A password is not part of the sentence check.
+
+Statistics sits just left of Sign out. Letter ridges are the mean gap between two letters. A word ridge is the pause from the last letter of one word, across one space, to the first letter of the next. The row names those two letters and the two words, such as `t → n` with `cat → nap` underneath. A longer ridge is a slower mean. A thicker ridge was seen more often. When nothing is stored yet, the page asks for a few lines first. The page switch is at the top of each page.
 
 ## Aim
 
@@ -32,7 +34,7 @@ Rows for the pace live in `keystrike_ngram`. `profile_name` is the signed-in use
 
 When the same sequence is typed again, each step time becomes the running mean of every writing of that sequence. Letters are folded to lower case. The latest ten keys for each account are held in memory so the next chain can be formed. The rows themselves stay in pgvector across a restart.
 
-The account, the session, and the sent lines live beside that table. `account` holds the username and the password hash. `account_session` holds a hash of the sign-in token. `sent_line` holds each line the account sent, with its language.
+The account, the session, and the sent lines live beside that table. `account` holds the username and the password hash. `account_session` holds a hash of the sign-in token. `sent_line` holds each line the account sent, with its language. Statistics reads that account only. Letter rows are the length-2 letter pairs. Word rows are the length-3 steps that are a letter, one space, and a letter. The pause is the sum of those two step means. The words named on a row come from the lines that account sent. Edge punctuation is left off the word. A comma or a double space between the letters leaves that pair unnamed. One letter crossing can name up to six word pairs. The chart keeps the 16 most seen letter pairs and the 12 most seen word pauses.
 
 For the letters in `login`, the length-2 steps are `l→o`, `o→g`, `g→i`, and `i→n`. The same keystrokes also update the longer windows that end on each of those letters, up to length 10.
 
@@ -42,7 +44,7 @@ For the letters in `login`, the length-2 steps are `l→o`, `o→g`, `g→i`, an
 | --- | --- | --- | --- |
 | `pgvector` | Profile store | `localhost:5432` | `pgvector:5432` |
 | `word-frequency` | Keystrike analysis | [http://localhost:8080](http://localhost:8080) | `http://word-frequency:8080` |
-| `login-web` | Account, line, and sentence-check pages | [http://localhost:8081](http://localhost:8081) | `http://login-web:80` |
+| `login-web` | Account, lines, statistics, and sentence check | [http://localhost:8081](http://localhost:8081) | `http://login-web:80` |
 
 `word-frequency` is a Spring Boot 4.1.2 service on Java 25, with Lombok. Its notes and the full request shape are in [word-frequency/README.md](word-frequency/README.md). The page is in [login-web/README.md](login-web/README.md).
 
@@ -82,7 +84,7 @@ Start the store, the service, and the page:
 docker compose up --build
 ```
 
-The `word-frequency` tests cover the analysis, the controller, and the pgvector store. From `word-frequency/`:
+The `word-frequency` tests cover the analysis, the account gate, the word crossings on Statistics, and the pgvector store. From `word-frequency/`:
 
 ```bash
 mvn test
