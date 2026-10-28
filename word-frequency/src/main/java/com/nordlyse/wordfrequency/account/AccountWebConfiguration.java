@@ -22,7 +22,12 @@ public class AccountWebConfiguration implements WebMvcConfigurer {
             return;
         }
         registry.addInterceptor(new AccountGate(service))
-                .addPathPatterns("/keystrikes", "/keystrikes/**", "/matches", "/matches/**", "/lines", "/lines/**", "/sessions");
+                .addPathPatterns(
+                        "/keystrikes", "/keystrikes/**",
+                        "/matches", "/matches/**",
+                        "/lines", "/lines/**",
+                        "/profile", "/profile/**",
+                        "/sessions");
     }
 
     @Override
@@ -38,6 +43,10 @@ public class AccountWebConfiguration implements WebMvcConfigurer {
         registry.addMapping("/lines")
                 .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
                 .allowedMethods("GET", "POST")
+                .allowedHeaders("Content-Type", "Authorization");
+        registry.addMapping("/profile")
+                .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
+                .allowedMethods("GET")
                 .allowedHeaders("Content-Type", "Authorization");
     }
 }

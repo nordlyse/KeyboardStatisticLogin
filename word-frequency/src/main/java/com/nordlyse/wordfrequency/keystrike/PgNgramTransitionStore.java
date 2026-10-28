@@ -1,5 +1,6 @@
 package com.nordlyse.wordfrequency.keystrike;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -45,6 +46,26 @@ public class PgNgramTransitionStore implements NgramTransitionStore {
     public Optional<NgramTransition> find(int orderSize, String sequence) {
         return load(orderSize, sequence, false)
                 .map(row -> fromRow(orderSize, sequence, row).transition());
+    }
+
+    @Override
+    public List<NgramTransition> list(int orderSize) {
+        return jdbc.sql("""
+                SELECT sequence, seen_count, error_count, CAST(features AS text) AS features
+                FROM keystrike_ngram
+                WHERE profile_name = :profile
+                  AND order_size = :orderSize
+                  AND seen_count > 0
+                ORDER BY seen_count DESC, sequence
+                """)
+                .param("profile", profile())
+                .param("orderSize", orderSize)
+                .query((rs, rowNumber) -> fromRow(
+                        orderSize,
+                        rs.getString("sequence"),
+                        new Row(rs.getLong("seen_count"), rs.getLong("error_count"), rs.getString("features")))
+                        .transition())
+                .list();
     }
 
     @Override

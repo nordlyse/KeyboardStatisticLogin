@@ -1,6 +1,7 @@
 package com.nordlyse.wordfrequency.keystrike;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,6 +24,16 @@ class MemoryNgramTransitionStore implements NgramTransitionStore {
     public Optional<NgramTransition> find(int orderSize, String sequence) {
         StoredNgram stored = rows.get(key(orderSize, sequence));
         return stored == null ? Optional.empty() : Optional.of(stored.transition());
+    }
+
+    @Override
+    public List<NgramTransition> list(int orderSize) {
+        String prefix = ActiveProfile.orElse("local") + "\n" + orderSize + "\n";
+        return rows.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(prefix))
+                .map(entry -> entry.getValue().transition())
+                .filter(row -> row.seenCount() > 0)
+                .toList();
     }
 
     @Override

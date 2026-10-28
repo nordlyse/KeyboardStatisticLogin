@@ -6,7 +6,7 @@ The first page asks for a username and a password. A first visit registers that 
 
 After sign-in, the lines page asks for a language and shows a prepared line. Six languages are available, with forty lines each. A later visit skips the lines that account already sent and shows one that is still new, in a mixed order. After those lines are sent, the next prompt is a new sentence made from the stored words. The person types the line and sends it. They can also write an extra line. Each letter is posted, with its time, to `word-frequency` for that account. The same letter sequence, typed again at a different pace, updates a running mean.
 
-The sentence check is a separate page. It shows a sentence assembled from words the account already sent. The sentence does not have to mean anything, and each visit asks for a different sentence. The person types that sentence, and the page compares that pace with the stored profile. The result stays on the page. A match above 95% is accepted. When no lines have been stored, that page asks for writing first. The switch between the two pages is at the top of each page. A password is not part of this check.
+The sentence check is a separate page. It shows a sentence assembled from words the account already sent. The sentence does not have to mean anything, and each visit asks for a different sentence. The person types that sentence, and the page compares that pace with the stored profile. The result stays on the page. A match above 95% is accepted. When no lines have been stored, that page asks for writing first. Statistics, just left of Sign out, draws that stored pace as a fingerprint of letter gaps and word pauses. The page switch is at the top of each page. A password is not part of the sentence check.
 
 ## Aim
 

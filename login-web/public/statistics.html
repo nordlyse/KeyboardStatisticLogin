@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statistics · KeyboardStatisticLogin</title>
+  <link rel="stylesheet" href="page.css">
+  <script src="session.js"></script>
+  <script>
+    if (!window.AccountSession.token()) {
+      window.location.replace("account.html");
+    }
+  </script>
+</head>
+<body data-account-url="http://localhost:8080">
+  <div class="aurora" aria-hidden="true">
+    <i></i>
+    <i></i>
+    <i></i>
+  </div>
+  <main class="panel passage stats">
+    <nav class="switch" aria-label="Pages">
+      <a href="index.html">Type the lines</a>
+      <a href="sign-in.html">Check a sentence</a>
+      <a class="current" href="statistics.html" aria-current="page">Statistics</a>
+      <button class="quiet" id="sign-out" type="button">Sign out</button>
+    </nav>
+    <p class="signed-in" id="who"></p>
+    <p class="eyebrow">KeyboardStatisticLogin</p>
+    <h1>Statistics</h1>
+    <p class="lead">These ridges are the stored pace of this account. Letter ridges are the mean gap between two letters. Word ridges are the pause from the end of one word to the start of the next. A longer ridge is slower. A thicker ridge was seen more often.</p>
+    <p class="notice" id="empty" hidden>No pace is stored yet. Type a few lines first.</p>
+    <section id="letters" hidden>
+      <h2>Letter to letter</h2>
+      <svg class="print" id="letter-print" role="img" aria-label="Letter pace fingerprint"></svg>
+      <ul class="mark-list" id="letter-list"></ul>
+    </section>
+    <section id="words" hidden>
+      <h2>Word to word</h2>
+      <svg class="print" id="word-print" role="img" aria-label="Word pace fingerprint"></svg>
+      <ul class="mark-list" id="word-list"></ul>
+    </section>
+  </main>
+  <script>
+    const svgNs = "http://www.w3.org/2000/svg";
+    const panel = document.querySelector(".panel");
+
+    panel.addEventListener("pointermove", function (event) {
+      const bounds = panel.getBoundingClientRect();
+      panel.style.setProperty("--spot-x", (event.clientX - bounds.left) + "px");
+      panel.style.setProperty("--spot-y", (event.clientY - bounds.top) + "px");
+    });
+
+    function showChart(sectionId, printId, listId, marks) {
+      const section = document.querySelector(sectionId);
+      if (!marks || marks.length === 0) {
+        section.hidden = true;
+        return;
+      }
+      section.hidden = false;
+      drawPrint(document.querySelector(printId), marks);
+      fillList(document.querySelector(listId), marks);
+    }
+
+    function drawPrint(svg, marks) {
+      const width = 720;
+      const row = 36;
+      const height = marks.length * row + 8;
+      const maxMean = Math.max.apply(null, marks.map(function (mark) {
+        return mark.meanMillis;
+      }));
+      const maxSeen = Math.max.apply(null, marks.map(function (mark) {
+        return mark.seenCount;
+      }));
+      svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+      svg.replaceChildren();
+      marks.forEach(function (mark, index) {
+        const y = 18 + index * row;
+        const reach = 150 + (mark.meanMillis / maxMean) * (width - 230);
+        const weight = 1.6 + (mark.seenCount / maxSeen) * 4.4;
+        const path = document.createElementNS(svgNs, "path");
+        path.setAttribute("d", ridge(y, reach, width));
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", index % 2 === 0 ? "#5eead4" : "#818cf8");
+        path.setAttribute("stroke-width", weight.toFixed(2));
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("opacity", "0.92");
+        svg.appendChild(path);
+        const label = document.createElementNS(svgNs, "text");
+        label.setAttribute("x", "8");
+        label.setAttribute("y", String(y + 4));
+        label.textContent = mark.from + " → " + mark.to;
+        svg.appendChild(label);
+      });
+    }
+
+    function ridge(y, reach, width) {
+      const start = 78;
+      const end = width - 16;
+      const crest = start + reach * 0.55;
+      return "M " + start + " " + y
+        + " C " + (start + 40) + " " + (y - 11)
+        + ", " + (crest - 30) + " " + (y + 12)
+        + ", " + crest + " " + y
+        + " S " + (end - 40) + " " + (y - 8)
+        + ", " + end + " " + y;
+    }
+
+    function fillList(list, marks) {
+      const maxMean = Math.max.apply(null, marks.map(function (mark) {
+        return mark.meanMillis;
+      }));
+      list.replaceChildren();
+      marks.forEach(function (mark) {
+        const item = document.createElement("li");
+        const name = document.createElement("span");
+        name.textContent = mark.from + " → " + mark.to;
+        const track = document.createElement("span");
+        track.className = "track";
+        const fill = document.createElement("i");
+        fill.style.width = Math.max(8, (mark.meanMillis / maxMean) * 100) + "%";
+        track.appendChild(fill);
+        const detail = document.createElement("span");
+        detail.textContent = Math.round(mark.meanMillis) + " ms · seen " + mark.seenCount;
+        item.append(name, track, detail);
+        list.appendChild(item);
+      });
+    }
+
+    window.AccountSession.bindSignOut(document.querySelector("#sign-out"));
+    window.AccountSession.guard().then(function (account) {
+      document.querySelector("#who").textContent = "Signed in as " + account.username;
+      return window.AccountSession.authFetch(window.AccountSession.base() + "/profile");
+    }).then(function (response) {
+      if (!response.ok) {
+        throw new Error("The stored pace could not be read.");
+      }
+      return response.json();
+    }).then(function (profile) {
+      const letters = profile.letters || [];
+      const words = profile.words || [];
+      document.querySelector("#empty").hidden = letters.length > 0 || words.length > 0;
+      showChart("#letters", "#letter-print", "#letter-list", letters);
+      showChart("#words", "#word-print", "#word-list", words);
+    }).catch(function (error) {
+      if (error.message !== "Sign in again.") {
+        document.querySelector("#empty").hidden = false;
+        document.querySelector("#empty").textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>
