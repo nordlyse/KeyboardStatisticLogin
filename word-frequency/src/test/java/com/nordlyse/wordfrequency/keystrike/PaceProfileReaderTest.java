@@ -33,7 +33,50 @@ class PaceProfileReaderTest {
                         org.assertj.core.groups.Tuple.tuple("n", "a"),
                         org.assertj.core.groups.Tuple.tuple("a", "p"));
         assertThat(profile.letters()).allSatisfy(mark -> assertThat(mark.meanMillis()).isCloseTo(100, offset(0.001)));
-        assertThat(profile.words()).containsExactly(new PaceMark("t", "n", 1, 200, 0));
+        assertThat(profile.words()).containsExactly(new PaceMark("t", "n", 1, 200, 0, List.of()));
+    }
+
+    @Test
+    void namesTheWordsOnEitherSideOfTheLetterCrossing() {
+        train("cat nap", 100);
+
+        PaceMark gap = profiles.read(List.of("cat nap")).words().get(0);
+
+        assertThat(gap.from()).isEqualTo("t");
+        assertThat(gap.to()).isEqualTo("n");
+        assertThat(gap.words()).containsExactly(new WordCrossing("cat", "nap"));
+    }
+
+    @Test
+    void keepsTheTypedCapitalsOnTheWords() {
+        train("Cat Nap.", 80);
+
+        PaceMark gap = profiles.read(List.of("Cat Nap.")).words().get(0);
+
+        assertThat(gap.from()).isEqualTo("t");
+        assertThat(gap.to()).isEqualTo("n");
+        assertThat(gap.words()).containsExactly(new WordCrossing("Cat", "Nap"));
+    }
+
+    @Test
+    void listsEveryWordPairThatUsesTheSameLetterCrossing() {
+        train("cat nap", 100);
+        train("hot noon", 100);
+
+        PaceMark gap = profiles.read(List.of("hot noon", "cat nap")).words().get(0);
+
+        assertThat(gap.from()).isEqualTo("t");
+        assertThat(gap.to()).isEqualTo("n");
+        assertThat(gap.words()).containsExactly(
+                new WordCrossing("cat", "nap"),
+                new WordCrossing("hot", "noon"));
+    }
+
+    @Test
+    void skipsAWordPairSplitByPunctuation() {
+        train("cat nap", 100);
+
+        assertThat(profiles.read(List.of("cat, nap")).words().get(0).words()).isEmpty();
     }
 
     @Test

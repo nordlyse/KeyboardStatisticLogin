@@ -208,11 +208,28 @@ button.quiet {
 
 .mark-list li {
   display: grid;
-  grid-template-columns: 4.8rem 1fr auto;
+  grid-template-columns: minmax(9rem, 1.5fr) minmax(4rem, 1fr) auto;
   gap: 12px;
   align-items: center;
   padding: 8px 0;
   border-top: 1px solid var(--line);
+}
+
+.mark-list .name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mark-list .name strong {
+  font-weight: 650;
+}
+
+.mark-list .name small {
+  color: #b7c0d4;
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .track {

@@ -28,7 +28,7 @@
     <p class="signed-in" id="who"></p>
     <p class="eyebrow">KeyboardStatisticLogin</p>
     <h1>Statistics</h1>
-    <p class="lead">These ridges are the stored pace of this account. Letter ridges are the mean gap between two letters. Word ridges are the pause from the end of one word to the start of the next. A longer ridge is slower. A thicker ridge was seen more often.</p>
+    <p class="lead">These ridges are the stored pace of this account. Letter ridges are the mean gap between two letters. A word ridge names the last letter of one word and the first letter of the next, together with those two words. A longer ridge is slower. A thicker ridge was seen more often.</p>
     <p class="notice" id="empty" hidden>No pace is stored yet. Type a few lines first.</p>
     <section id="letters" hidden>
       <h2>Letter to letter</h2>
@@ -66,6 +66,10 @@
       const width = 720;
       const row = 36;
       const height = marks.length * row + 8;
+      const labels = marks.map(ridgeLabel);
+      const gutter = Math.min(340, Math.max(78, 18 + Math.max.apply(null, labels.map(function (text) {
+        return text.length;
+      })) * 7.2));
       const maxMean = Math.max.apply(null, marks.map(function (mark) {
         return mark.meanMillis;
       }));
@@ -76,10 +80,10 @@
       svg.replaceChildren();
       marks.forEach(function (mark, index) {
         const y = 18 + index * row;
-        const reach = 150 + (mark.meanMillis / maxMean) * (width - 230);
+        const reach = 120 + (mark.meanMillis / maxMean) * Math.max(40, width - gutter - 180);
         const weight = 1.6 + (mark.seenCount / maxSeen) * 4.4;
         const path = document.createElementNS(svgNs, "path");
-        path.setAttribute("d", ridge(y, reach, width));
+        path.setAttribute("d", ridge(y, reach, width, gutter));
         path.setAttribute("fill", "none");
         path.setAttribute("stroke", index % 2 === 0 ? "#5eead4" : "#818cf8");
         path.setAttribute("stroke-width", weight.toFixed(2));
@@ -89,13 +93,28 @@
         const label = document.createElementNS(svgNs, "text");
         label.setAttribute("x", "8");
         label.setAttribute("y", String(y + 4));
-        label.textContent = mark.from + " → " + mark.to;
+        label.textContent = ridgeLabel(mark);
         svg.appendChild(label);
       });
     }
 
-    function ridge(y, reach, width) {
-      const start = 78;
+    function wordPairs(mark) {
+      return (mark.words || []).map(function (word) {
+        return word.fromWord + " → " + word.toWord;
+      });
+    }
+
+    function ridgeLabel(mark) {
+      const letters = mark.from + " → " + mark.to;
+      const pairs = wordPairs(mark);
+      if (pairs.length === 0) {
+        return letters;
+      }
+      const extra = pairs.length > 1 ? " +" + (pairs.length - 1) : "";
+      return letters + " · " + pairs[0] + extra;
+    }
+
+    function ridge(y, reach, width, start) {
       const end = width - 16;
       const crest = start + reach * 0.55;
       return "M " + start + " " + y
@@ -114,7 +133,16 @@
       marks.forEach(function (mark) {
         const item = document.createElement("li");
         const name = document.createElement("span");
-        name.textContent = mark.from + " → " + mark.to;
+        name.className = "name";
+        const letters = document.createElement("strong");
+        letters.textContent = mark.from + " → " + mark.to;
+        name.appendChild(letters);
+        const pairs = wordPairs(mark);
+        if (pairs.length > 0) {
+          const words = document.createElement("small");
+          words.textContent = pairs.join(", ");
+          name.appendChild(words);
+        }
         const track = document.createElement("span");
         track.className = "track";
         const fill = document.createElement("i");

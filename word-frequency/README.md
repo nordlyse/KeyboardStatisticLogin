@@ -12,7 +12,7 @@ The counts, the error frequency, and the step means are written into a `vector(1
 
 ## Account
 
-`POST /accounts` registers `{ "username", "password" }`. The password is stored as a PBKDF2-SHA256 hash. `POST /sessions` checks that pair and returns a token. Later requests send `Authorization: Bearer <token>`. `GET /sessions` reads the current account. `DELETE /sessions` closes it. `GET /lines` and `POST /lines` keep the lines the account sent, as `{ "language", "text" }`. `GET /profile` returns the account's letter-to-letter means and the pauses between words. `/keystrikes`, `/matches`, `/lines`, and `/profile` refuse a request with no valid token.
+`POST /accounts` registers `{ "username", "password" }`. The password is stored as a PBKDF2-SHA256 hash. `POST /sessions` checks that pair and returns a token. Later requests send `Authorization: Bearer <token>`. `GET /sessions` reads the current account. `DELETE /sessions` closes it. `GET /lines` and `POST /lines` keep the lines the account sent, as `{ "language", "text" }`. `GET /profile` returns the account's letter-to-letter means and the pauses between words. Each pause names the last letter of one word, the first letter of the next, and the two words those letters belong to. `/keystrikes`, `/matches`, `/lines`, and `/profile` refuse a request with no valid token.
 
 ## Keystrikes
 
