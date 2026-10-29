@@ -49,8 +49,17 @@
           <button class="quiet" id="another" type="button">Another sentence</button>
         </div>
       </div>
-      <p class="status" id="status" role="status">Type the sentence as it is shown.</p>
+      <div class="result">
+        <p class="status" id="status" role="status">Type the sentence as it is shown.</p>
+        <button class="quiet compare" id="compare" type="button" hidden>Compare</button>
+      </div>
     </form>
+    <section id="comparison" hidden>
+      <h2>This sentence and the stored pace</h2>
+      <p class="legend"><i class="stored"></i>Stored mean <i class="attempt"></i>This attempt</p>
+      <svg class="print" id="compare-print" role="img" aria-label="Pace comparison"></svg>
+      <ul class="compare-list" id="compare-list"></ul>
+    </section>
   </main>
   <script src="written.js"></script>
   <script>
@@ -62,7 +71,11 @@
     const attempt = document.querySelector("#attempt");
     const panel = document.querySelector(".panel");
     const status = document.querySelector("#status");
+    const compare = document.querySelector("#compare");
+    const comparison = document.querySelector("#comparison");
     const notice = document.querySelector("#notice");
+    const svgNs = "http://www.w3.org/2000/svg";
+    let latestSteps = [];
     const written = window.WrittenLines;
     const endpoint = document.body.dataset.matchUrl;
     const keys = [];
@@ -116,6 +129,83 @@
       if (tone) {
         status.classList.add(tone);
       }
+      latestSteps = [];
+      compare.hidden = true;
+      comparison.hidden = true;
+      compare.textContent = "Compare";
+    }
+
+    function markSymbol(symbol) {
+      return symbol === " " ? "␣" : symbol;
+    }
+
+    function drawComparison(steps) {
+      const svg = document.querySelector("#compare-print");
+      const list = document.querySelector("#compare-list");
+      const width = 720;
+      const height = 220;
+      const left = 28;
+      const right = 16;
+      const top = 18;
+      const bottom = 42;
+      const peak = Math.max.apply(null, steps.map(function (step) {
+        return Math.max(step.attemptMillis, step.meanMillis);
+      }));
+      const max = Math.max(1, peak) * 1.15;
+      const span = width - left - right;
+      function xOf(index) {
+        if (steps.length === 1) {
+          return left + span / 2;
+        }
+        return left + (span * index) / (steps.length - 1);
+      }
+      function yOf(millis) {
+        return top + (1 - millis / max) * (height - top - bottom);
+      }
+      function line(key, color) {
+        const path = document.createElementNS(svgNs, "polyline");
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", color);
+        path.setAttribute("stroke-width", "2.6");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        path.setAttribute("points", steps.map(function (step, index) {
+          return xOf(index) + "," + yOf(step[key]);
+        }).join(" "));
+        svg.appendChild(path);
+        steps.forEach(function (step, index) {
+          const dot = document.createElementNS(svgNs, "circle");
+          dot.setAttribute("cx", xOf(index));
+          dot.setAttribute("cy", yOf(step[key]));
+          dot.setAttribute("r", "3.6");
+          dot.setAttribute("fill", color);
+          svg.appendChild(dot);
+        });
+      }
+      svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+      svg.replaceChildren();
+      line("meanMillis", "#5eead4");
+      line("attemptMillis", "#818cf8");
+      if (steps.length <= 14) {
+        steps.forEach(function (step, index) {
+          const label = document.createElementNS(svgNs, "text");
+          label.setAttribute("x", xOf(index));
+          label.setAttribute("y", height - 14);
+          label.setAttribute("text-anchor", "middle");
+          label.textContent = markSymbol(step.from) + "→" + markSymbol(step.to);
+          svg.appendChild(label);
+        });
+      }
+      list.replaceChildren();
+      steps.forEach(function (step) {
+        const item = document.createElement("li");
+        const name = document.createElement("span");
+        name.textContent = markSymbol(step.from) + " → " + markSymbol(step.to);
+        const detail = document.createElement("span");
+        detail.textContent = "stored " + Math.round(step.meanMillis) + " ms · this " + Math.round(step.attemptMillis) + " ms";
+        item.append(name, detail);
+        list.appendChild(item);
+      });
     }
 
     function readProfile() {
@@ -148,11 +238,14 @@
         return;
       }
       const percent = Number(report.matchPercent).toFixed(1);
+      const steps = Array.isArray(report.steps) ? report.steps : [];
       if (report.accepted) {
         setStatus("Match accepted at " + percent + "%.", "verified");
-        return;
+      } else {
+        setStatus("Match refused at " + percent + "%.", "refused");
       }
-      setStatus("Match refused at " + percent + "%.", "refused");
+      latestSteps = steps;
+      compare.hidden = steps.length === 0;
     }
 
     panel.addEventListener("pointermove", function (event) {
@@ -194,6 +287,15 @@
 
     another.addEventListener("click", function () {
       pickSentence();
+    });
+
+    compare.addEventListener("click", function () {
+      const opening = comparison.hidden;
+      comparison.hidden = !opening;
+      compare.textContent = opening ? "Hide" : "Compare";
+      if (opening) {
+        drawComparison(latestSteps);
+      }
     });
 
     form.addEventListener("submit", function (event) {

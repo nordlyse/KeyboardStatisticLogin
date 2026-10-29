@@ -1,6 +1,7 @@
 package com.nordlyse.wordfrequency.keystrike;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.offset;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -112,6 +113,47 @@ class KeystrikeMatcherTest {
         } finally {
             ActiveProfile.clear();
         }
+    }
+
+    @Test
+    void listsEachStepBesideTheStoredMean() {
+        train("cat", 100);
+        train("cat", 300);
+
+        MatchReport report = matcher.score(attempt("cat", 200));
+
+        assertThat(report.steps()).containsExactly(
+                new PaceCompare("c", "a", 200, 200),
+                new PaceCompare("a", "t", 200, 200));
+    }
+
+    @Test
+    void listsASlowerAttemptBesideTheStoredMean() {
+        train("cat", 100);
+
+        MatchReport report = matcher.score(attempt("cat", 400));
+
+        assertThat(report.steps()).hasSize(2);
+        assertThat(report.steps().get(0).from()).isEqualTo("c");
+        assertThat(report.steps().get(0).to()).isEqualTo("a");
+        assertThat(report.steps().get(0).attemptMillis()).isCloseTo(400, offset(0.001));
+        assertThat(report.steps().get(0).meanMillis()).isCloseTo(100, offset(0.001));
+    }
+
+    @Test
+    void leavesTheComparisonEmptyWhenTheSentenceIsDifferent() {
+        train("a cat", 100);
+
+        MatchReport report = matcher.score(new MatchAttempt(attempt("a cat", 100).keys(), "a dog"));
+
+        assertThat(report.steps()).isEmpty();
+    }
+
+    @Test
+    void leavesTheComparisonEmptyWhenNoStoredStepMatches() {
+        train("cat", 100);
+
+        assertThat(matcher.score(attempt("zoo", 100)).steps()).isEmpty();
     }
 
     @Test

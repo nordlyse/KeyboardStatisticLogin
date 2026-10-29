@@ -65,7 +65,11 @@ class MatchControllerTest {
                 .andExpect(jsonPath("$.scored").value(true))
                 .andExpect(jsonPath("$.matchPercent").value(100.0))
                 .andExpect(jsonPath("$.accepted").value(true))
-                .andExpect(jsonPath("$.aligned").value(true));
+                .andExpect(jsonPath("$.aligned").value(true))
+                .andExpect(jsonPath("$.steps[0].from").value("a"))
+                .andExpect(jsonPath("$.steps[0].to").value("b"))
+                .andExpect(jsonPath("$.steps[0].attemptMillis").value(100.0))
+                .andExpect(jsonPath("$.steps[0].meanMillis").value(100.0));
 
         mockMvc.perform(post("/matches")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -78,7 +82,8 @@ class MatchControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.aligned").value(false))
                 .andExpect(jsonPath("$.scored").value(false))
-                .andExpect(jsonPath("$.accepted").value(false));
+                .andExpect(jsonPath("$.accepted").value(false))
+                .andExpect(jsonPath("$.steps.length()").value(0));
 
         mockMvc.perform(post("/matches")
                         .contentType(MediaType.APPLICATION_JSON)

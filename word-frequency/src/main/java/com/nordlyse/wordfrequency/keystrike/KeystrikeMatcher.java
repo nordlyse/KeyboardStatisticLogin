@@ -21,28 +21,30 @@ public class KeystrikeMatcher {
     private final Clock clock;
 
     public MatchReport profile() {
-        return new MatchReport(store.hasSamples(), false, 0, false, false);
+        return report(store.hasSamples(), false, 0, false, false, List.of());
     }
 
     public MatchReport score(MatchAttempt attempt) {
         if (!store.hasSamples()) {
-            return new MatchReport(false, false, 0, false, false);
+            return report(false, false, 0, false, false, List.of());
         }
         List<KeystrikeRequest> keys = attempt == null || attempt.keys() == null ? List.of() : attempt.keys();
         List<Tick> kept = keptKeys(keys);
         String sentence = attempt == null ? null : attempt.sentence();
         if (sentence != null && !sentence.isBlank() && !sameSentence(kept, sentence)) {
-            return new MatchReport(true, false, 0, false, false);
+            return report(true, false, 0, false, false, List.of());
         }
         if (kept.size() < 2) {
-            return new MatchReport(true, false, 0, false, true);
+            return report(true, false, 0, false, true, List.of());
         }
         double total = 0;
         int compared = 0;
+        List<PaceCompare> steps = new ArrayList<>();
         for (int end = 1; end < kept.size(); end++) {
-            Optional<Double> pair = pairScore(kept, end);
+            Optional<PaceCompare> pair = pairCompare(kept, end);
             if (pair.isPresent()) {
-                total += pair.get();
+                steps.add(pair.get());
+                total += closeness(pair.get().attemptMillis(), pair.get().meanMillis());
                 compared++;
             }
             int longest = Math.min(NgramAccumulator.MAX_ORDER, end + 1);
@@ -57,11 +59,21 @@ public class KeystrikeMatcher {
         }
         if (compared == 0) {
             log.info("Scored a sentence at {} percent", 0.0);
-            return new MatchReport(true, true, 0, false, true);
+            return report(true, true, 0, false, true, List.of());
         }
         double shown = Math.round((100.0 * total / compared) * 10.0) / 10.0;
         log.info("Scored a sentence at {} percent", shown);
-        return new MatchReport(true, true, shown, shown > ACCEPT_ABOVE, true);
+        return report(true, true, shown, shown > ACCEPT_ABOVE, true, steps);
+    }
+
+    private static MatchReport report(
+            boolean ready,
+            boolean scored,
+            double matchPercent,
+            boolean accepted,
+            boolean aligned,
+            List<PaceCompare> steps) {
+        return new MatchReport(ready, scored, matchPercent, accepted, aligned, steps);
     }
 
     private static boolean sameSentence(List<Tick> kept, String sentence) {
@@ -99,12 +111,16 @@ public class KeystrikeMatcher {
         return kept;
     }
 
-    private Optional<Double> pairScore(List<Tick> kept, int end) {
+    private Optional<PaceCompare> pairCompare(List<Tick> kept, int end) {
         Optional<NgramTransition> stored = store.find(2, sequence(kept, end, 2));
         if (stored.isEmpty() || stored.get().seenCount() == 0 || stored.get().stepMillis().length == 0) {
             return Optional.empty();
         }
-        return Optional.of(closeness(steps(kept, end, 2)[0], stored.get().stepMillis()[0]));
+        return Optional.of(new PaceCompare(
+                kept.get(end - 1).symbol(),
+                kept.get(end).symbol(),
+                steps(kept, end, 2)[0],
+                stored.get().stepMillis()[0]));
     }
 
     private static double timingScore(double[] samples, double[] means) {

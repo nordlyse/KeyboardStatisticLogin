@@ -280,11 +280,59 @@ select {
 
 .actions button { flex: 1; }
 
+.result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0 0;
+}
+
 .status {
   min-height: 1.4em;
-  margin: 16px 0 0;
+  margin: 0;
   color: var(--muted);
   line-height: 1.45;
+}
+
+button.compare {
+  width: auto;
+  flex: 0 0 auto;
+  padding: 10px 16px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0 0 8px;
+  color: var(--muted);
+}
+
+.legend i {
+  display: inline-block;
+  width: 22px;
+  height: 3px;
+  margin-right: 8px;
+  border-radius: 99px;
+  vertical-align: middle;
+}
+
+.legend .stored { background: #5eead4; }
+.legend .attempt { background: #818cf8; }
+
+.compare-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+
+.compare-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
 }
 
 .status.verified { color: #9ae6d4; }
