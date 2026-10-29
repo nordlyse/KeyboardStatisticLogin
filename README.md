@@ -6,7 +6,7 @@ The first page asks for a username and a password. A first visit registers that 
 
 After sign-in, the lines page asks for a language and shows a prepared line. Six languages are available, with forty lines each. A later visit skips the lines that account already sent and shows one that is still new, in a mixed order. After those lines are sent, the next prompt is a new sentence made from the stored words. The person types the line and sends it. They can also write an extra line. Each letter is posted, with its time, to `word-frequency` for that account. The same letter sequence, typed again at a different pace, updates a running mean.
 
-The sentence check is a separate page. It shows a sentence assembled from words the account already sent. The sentence does not have to mean anything, and each visit asks for a different sentence. The person types that sentence, and the page compares that pace with the stored profile. The result stays on the page. A match above 95% is accepted. When no lines have been stored, that page asks for writing first. A password is not part of the sentence check.
+The sentence check is a separate page. It shows a sentence assembled from words the account already sent. The sentence does not have to mean anything, and each visit asks for a different sentence. The person types that sentence, and the page compares that pace with the stored profile. The result stays on the page. A match above 95% is accepted. Beside the percent, Compare draws this sentence against the stored mean. Teal is the stored pace and violet is this attempt. A space is one of those steps, and the same letter pair is drawn again each time it occurs. A deleted letter is left out. A pair that was never stored is left off the chart, and Compare stays hidden when nothing can be drawn. Hide closes it. The check does not change the stored mean. When no lines have been stored, that page asks for writing first. A password is not part of the sentence check.
 
 Statistics sits just left of Sign out. Letter ridges are the mean gap between two letters. A word ridge is the pause from the last letter of one word, across one space, to the first letter of the next. The row names those two letters and the two words, such as `t → n` with `cat → nap` underneath. A longer ridge is a slower mean. A thicker ridge was seen more often. When nothing is stored yet, the page asks for a few lines first. The page switch is at the top of each page.
 
@@ -84,7 +84,7 @@ Start the store, the service, and the page:
 docker compose up --build
 ```
 
-The `word-frequency` tests cover the analysis, the account gate, the word crossings on Statistics, and the pgvector store. From `word-frequency/`:
+The `word-frequency` tests cover the analysis, the account gate, the word crossings on Statistics, the sentence comparison, and the pgvector store. From `word-frequency/`:
 
 ```bash
 mvn test
