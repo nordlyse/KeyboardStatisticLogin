@@ -44,7 +44,8 @@ class MatchControllerTest {
         mockMvc.perform(get("/matches"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.ready").value(false))
-                .andExpect(jsonPath("$.scored").value(false));
+                .andExpect(jsonPath("$.scored").value(false))
+                .andExpect(jsonPath("$.steps.length()").value(0));
     }
 
     @Test
@@ -94,7 +95,11 @@ class MatchControllerTest {
                                 ]}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accepted").value(false));
+                .andExpect(jsonPath("$.accepted").value(false))
+                .andExpect(jsonPath("$.steps[0].from").value("a"))
+                .andExpect(jsonPath("$.steps[0].to").value("b"))
+                .andExpect(jsonPath("$.steps[0].attemptMillis").value(400.0))
+                .andExpect(jsonPath("$.steps[0].meanMillis").value(100.0));
     }
 
     @Test

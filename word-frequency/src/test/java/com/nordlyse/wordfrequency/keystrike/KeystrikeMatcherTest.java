@@ -157,6 +157,94 @@ class KeystrikeMatcherTest {
     }
 
     @Test
+    void namesThePauseAcrossASpace() {
+        train("ab cd", 100);
+
+        assertThat(matcher.score(attempt("ab cd", 100)).steps()).containsExactly(
+                new PaceCompare("a", "b", 100, 100),
+                new PaceCompare("b", " ", 100, 100),
+                new PaceCompare(" ", "c", 100, 100),
+                new PaceCompare("c", "d", 100, 100));
+    }
+
+    @Test
+    void repeatsALetterStepEachTimeItOccurs() {
+        train("ab", 100);
+
+        assertThat(matcher.score(attempt("abab", 100)).steps()).containsExactly(
+                new PaceCompare("a", "b", 100, 100),
+                new PaceCompare("a", "b", 100, 100));
+    }
+
+    @Test
+    void keepsKnownStepsWhenALaterPairWasNeverSeen() {
+        train("cat", 100);
+
+        assertThat(matcher.score(attempt("catzoo", 100)).steps()).containsExactly(
+                new PaceCompare("c", "a", 100, 100),
+                new PaceCompare("a", "t", 100, 100));
+    }
+
+    @Test
+    void dropsADeletedLetterFromTheChart() {
+        train("cat", 100);
+        List<KeystrikeRequest> keys = List.of(
+                key("c", 0),
+                key("x", 100),
+                new KeystrikeRequest("Backspace", Instant.ofEpochMilli(150), false),
+                key("a", 200),
+                key("t", 300));
+
+        assertThat(matcher.score(new MatchAttempt(keys, "cat")).steps()).containsExactly(
+                new PaceCompare("c", "a", 200, 100),
+                new PaceCompare("a", "t", 100, 100));
+    }
+
+    @Test
+    void foldsCapitalsOnTheChart() {
+        train("cat", 100);
+        List<KeystrikeRequest> keys = List.of(key("C", 0), key("A", 100), key("T", 200));
+
+        assertThat(matcher.score(new MatchAttempt(keys, "CAT")).steps()).containsExactly(
+                new PaceCompare("c", "a", 100, 100),
+                new PaceCompare("a", "t", 100, 100));
+    }
+
+    @Test
+    void leavesAnotherAccountsChartEmpty() {
+        ActiveProfile.use("ada");
+        try {
+            train("cat", 100);
+            ActiveProfile.use("bee");
+            assertThat(matcher.score(attempt("cat", 100)).steps()).isEmpty();
+
+            ActiveProfile.use("ada");
+            assertThat(matcher.score(attempt("cat", 100)).steps()).hasSize(2);
+        } finally {
+            ActiveProfile.clear();
+        }
+    }
+
+    @Test
+    void doesNotStoreTheCheckedAttempt() {
+        train("cat", 100);
+
+        matcher.score(attempt("cat", 400));
+        PaceCompare step = matcher.score(attempt("cat", 100)).steps().get(0);
+
+        assertThat(step.attemptMillis()).isCloseTo(100, offset(0.001));
+        assertThat(step.meanMillis()).isCloseTo(100, offset(0.001));
+    }
+
+    @Test
+    void namesATurkishLetterStep() {
+        train("ış", 90);
+
+        assertThat(matcher.score(attempt("ış", 90)).steps())
+                .containsExactly(new PaceCompare("ı", "ş", 90, 90));
+    }
+
+    @Test
     void asksForASentenceWhenFewerThanTwoKeysRemain() {
         train("cat", 100);
 
@@ -164,6 +252,7 @@ class KeystrikeMatcherTest {
 
         assertThat(report.ready()).isTrue();
         assertThat(report.scored()).isFalse();
+        assertThat(report.steps()).isEmpty();
     }
 
     private void train(String text, long gap) {
