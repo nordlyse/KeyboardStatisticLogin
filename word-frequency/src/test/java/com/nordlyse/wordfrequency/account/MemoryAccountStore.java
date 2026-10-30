@@ -36,6 +36,13 @@ public class MemoryAccountStore implements AccountStore {
     }
 
     @Override
+    public void removeAccount(String username) {
+        accounts.remove(username);
+        sessions.entrySet().removeIf(entry -> username.equals(entry.getValue()));
+        lines.removeIf(line -> username.equals(line.username()));
+    }
+
+    @Override
     public void insertSession(String tokenHash, String username) {
         sessions.put(tokenHash, username);
     }

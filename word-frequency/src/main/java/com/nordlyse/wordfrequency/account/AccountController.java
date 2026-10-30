@@ -3,7 +3,9 @@ package com.nordlyse.wordfrequency.account;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,10 +20,17 @@ import lombok.RequiredArgsConstructor;
 public class AccountController {
 
     private final AccountService accounts;
+    private final AccountRemoval removal;
 
     @GetMapping
     public List<AccountSummary> listAccounts() {
         return accounts.listAccounts();
+    }
+
+    @DeleteMapping("/{username}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeAccount(@PathVariable String username) {
+        removal.removeAccount(username);
     }
 
     @PostMapping

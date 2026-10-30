@@ -15,6 +15,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import com.nordlyse.wordfrequency.account.AccountRemoval;
 import com.nordlyse.wordfrequency.account.AccountService;
 import com.nordlyse.wordfrequency.account.AccountStore;
 import com.nordlyse.wordfrequency.account.AccountWebConfiguration;
@@ -28,6 +29,7 @@ import com.nordlyse.wordfrequency.account.PasswordHasher;
 })
 @Import({
         AccountService.class,
+        AccountRemoval.class,
         AccountWebConfiguration.class,
         KeystrikeAnalysis.class,
         KeystrikeConfiguration.class,

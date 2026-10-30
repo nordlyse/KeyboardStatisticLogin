@@ -11,6 +11,8 @@ public interface AccountStore {
 
     void insertAccount(String username, String passwordHash);
 
+    void removeAccount(String username);
+
     void insertSession(String tokenHash, String username);
 
     Optional<String> usernameForToken(String tokenHash);

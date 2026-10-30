@@ -13,5 +13,7 @@ public interface NgramTransitionStore {
 
     List<NgramTransition> list(String profile, int orderSize);
 
+    void removeProfile(String profile);
+
     boolean hasSamples();
 }

@@ -53,6 +53,28 @@ public class PgAccountStore implements AccountStore {
     }
 
     @Override
+    public void removeAccount(String username) {
+        jdbc.sql("""
+                DELETE FROM account_session
+                WHERE username = :username
+                """)
+                .param("username", username)
+                .update();
+        jdbc.sql("""
+                DELETE FROM sent_line
+                WHERE username = :username
+                """)
+                .param("username", username)
+                .update();
+        jdbc.sql("""
+                DELETE FROM account
+                WHERE username = :username
+                """)
+                .param("username", username)
+                .update();
+    }
+
+    @Override
     public void insertSession(String tokenHash, String username) {
         jdbc.sql("""
                 INSERT INTO account_session (token_hash, username)

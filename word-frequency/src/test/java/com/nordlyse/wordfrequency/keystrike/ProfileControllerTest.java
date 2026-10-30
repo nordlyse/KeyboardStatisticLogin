@@ -1,6 +1,7 @@
 package com.nordlyse.wordfrequency.keystrike;
 
 import static org.hamcrest.Matchers.closeTo;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import com.nordlyse.wordfrequency.account.AccountController;
+import com.nordlyse.wordfrequency.account.AccountRemoval;
 import com.nordlyse.wordfrequency.account.AccountService;
 import com.nordlyse.wordfrequency.account.AccountStore;
 import com.nordlyse.wordfrequency.account.AccountWebConfiguration;
@@ -42,6 +44,7 @@ import com.nordlyse.wordfrequency.account.SessionController;
 @Import({
         PaceProfileReader.class,
         AccountService.class,
+        AccountRemoval.class,
         AccountWebConfiguration.class,
         KeystrikeAnalysis.class,
         KeystrikeConfiguration.class,
@@ -151,6 +154,34 @@ class ProfileControllerTest {
         mockMvc.perform(get("/profile").header("Authorization", "Bearer " + ada))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.words[0].words[0].fromWord").value("cat"));
+    }
+
+    @Test
+    void clearsTheNamedAccountsPace() throws Exception {
+        String ada = open("Ada");
+        String bee = open("Bee");
+        type(bee, "cat");
+        mockMvc.perform(post("/lines")
+                        .header("Authorization", "Bearer " + bee)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"language":"en","text":"cat"}
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/accounts/bee").header("Authorization", "Bearer " + ada))
+                .andExpect(status().isNoContent());
+
+        String again = open("Bee");
+        mockMvc.perform(get("/profile/Bee").header("Authorization", "Bearer " + ada))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.letters.length()").value(0))
+                .andExpect(jsonPath("$.words.length()").value(0));
+
+        type(again, "x");
+        mockMvc.perform(get("/profile").header("Authorization", "Bearer " + again))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.letters.length()").value(0));
     }
 
     @Test

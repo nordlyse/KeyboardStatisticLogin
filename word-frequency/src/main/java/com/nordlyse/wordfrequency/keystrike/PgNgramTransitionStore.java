@@ -74,6 +74,16 @@ public class PgNgramTransitionStore implements NgramTransitionStore {
     }
 
     @Override
+    public void removeProfile(String profile) {
+        jdbc.sql("""
+                DELETE FROM keystrike_ngram
+                WHERE profile_name = :profile
+                """)
+                .param("profile", profile)
+                .update();
+    }
+
+    @Override
     public boolean hasSamples() {
         return Boolean.TRUE.equals(jdbc.sql("""
                 SELECT EXISTS (

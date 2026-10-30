@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-class MemoryNgramTransitionStore implements NgramTransitionStore {
+public class MemoryNgramTransitionStore implements NgramTransitionStore {
 
     private final Map<String, StoredNgram> rows = new HashMap<>();
 
@@ -39,6 +39,12 @@ class MemoryNgramTransitionStore implements NgramTransitionStore {
                 .map(entry -> entry.getValue().transition())
                 .filter(row -> row.seenCount() > 0)
                 .toList();
+    }
+
+    @Override
+    public void removeProfile(String profile) {
+        String prefix = profile + "\n";
+        rows.keySet().removeIf(key -> key.startsWith(prefix));
     }
 
     @Override

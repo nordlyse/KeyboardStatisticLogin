@@ -17,11 +17,24 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import com.nordlyse.wordfrequency.keystrike.KeystrikeAnalysis;
+import com.nordlyse.wordfrequency.keystrike.KeystrikeSettings;
+import com.nordlyse.wordfrequency.keystrike.MemoryNgramTransitionStore;
+import com.nordlyse.wordfrequency.keystrike.NgramTransitionStore;
+
 @WebMvcTest(controllers = {AccountController.class, SessionController.class, SentLineController.class})
-@Import({AccountService.class, AccountWebConfiguration.class, AccountControllerTest.MemoryStoreConfiguration.class})
+@Import({
+        AccountService.class,
+        AccountRemoval.class,
+        AccountWebConfiguration.class,
+        KeystrikeAnalysis.class,
+        AccountControllerTest.MemoryStoreConfiguration.class
+})
+@TestPropertySource(properties = {"keystrike.max-order=10", "keystrike.profile=local"})
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 class AccountControllerTest {
 
@@ -113,6 +126,58 @@ class AccountControllerTest {
     }
 
     @Test
+    void removesTheNamedAccountAndLeavesTheOther() throws Exception {
+        register("Ada");
+        register("Bee");
+        String ada = token("Ada");
+        String bee = token("Bee");
+        mockMvc.perform(post("/lines")
+                        .header("Authorization", "Bearer " + bee)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"language":"en","text":"dog run"}
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/accounts/bee").header("Authorization", "Bearer " + ada))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/accounts").header("Authorization", "Bearer " + ada))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value("Ada"));
+        mockMvc.perform(get("/lines").header("Authorization", "Bearer " + bee))
+                .andExpect(status().isUnauthorized());
+
+        register("Bee");
+        mockMvc.perform(get("/lines").header("Authorization", "Bearer " + token("Bee")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void refusesToRemoveAnUnknownAccount() throws Exception {
+        register("Ada");
+
+        mockMvc.perform(delete("/accounts/missing").header("Authorization", "Bearer " + token("Ada")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void refusesToRemoveAUsernameOutsideTheAllowedShape() throws Exception {
+        register("Ada");
+
+        mockMvc.perform(delete("/accounts/Ada!").header("Authorization", "Bearer " + token("Ada")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void refusesToRemoveAnAccountWithoutAToken() throws Exception {
+        mockMvc.perform(delete("/accounts/Ada"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void allowsTheAccountPageToRegister() throws Exception {
         mockMvc.perform(options("/accounts")
                         .header("Origin", "http://localhost:8081")
@@ -127,6 +192,13 @@ class AccountControllerTest {
                         .header("Access-Control-Request-Headers", "Content-Type, Authorization"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:8081"));
+
+        mockMvc.perform(options("/accounts/Ada")
+                        .header("Origin", "http://localhost:8081")
+                        .header("Access-Control-Request-Method", "DELETE")
+                        .header("Access-Control-Request-Headers", "Content-Type, Authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:8081"));
     }
 
     private void register(String username) throws Exception {
@@ -134,6 +206,15 @@ class AccountControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"" + username + "\",\"password\":\"correct horse\"}"))
                 .andExpect(status().isCreated());
+    }
+
+    private String token(String username) throws Exception {
+        MvcResult opened = mockMvc.perform(post("/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"" + username + "\",\"password\":\"correct horse\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        return com.jayway.jsonpath.JsonPath.read(opened.getResponse().getContentAsString(), "$.token");
     }
 
     @TestConfiguration
@@ -147,6 +228,21 @@ class AccountControllerTest {
         @Bean
         PasswordHasher passwordHasher() {
             return new PasswordHasher(1_000);
+        }
+
+        @Bean
+        NgramTransitionStore ngramTransitionStore() {
+            return new MemoryNgramTransitionStore();
+        }
+
+        @Bean
+        KeystrikeSettings keystrikeSettings() {
+            return new KeystrikeSettings(10, "local");
+        }
+
+        @Bean
+        java.time.Clock keystrikeClock() {
+            return java.time.Clock.systemUTC();
         }
     }
 }

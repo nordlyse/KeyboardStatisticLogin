@@ -40,6 +40,10 @@ public class KeystrikeAnalysis {
         return saved;
     }
 
+    public synchronized void dropWindow(String profile) {
+        windows.remove(profile);
+    }
+
     private List<NgramUpdate> plan(ArrayDeque<KeyTick> next, KeyParser.Parsed key) {
         if (key.undo()) {
             return undo(next);
