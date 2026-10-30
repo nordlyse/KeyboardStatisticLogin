@@ -48,6 +48,10 @@ For the letters in `login`, the length-2 steps are `l→o`, `o→g`, `g→i`, an
 
 `word-frequency` is a Spring Boot 4.1.2 service on Java 25, with Lombok. Its notes and the full request shape are in [word-frequency/README.md](word-frequency/README.md). The page is in [login-web/README.md](login-web/README.md).
 
+## Accounts
+
+`GET /accounts` lists every account as `{ "id", "username", "addedAt" }`. The id is the username. The password hash is left out. `GET /profile/{username}` returns that account's letter gaps and word pauses, the same shape as the signed-in Statistics read. `DELETE /accounts/{username}` removes that account, its sessions, its sent lines, and its stored pace, including the keys still held in memory. A later registration of the same username starts empty. These reads and the removal need a bearer token. Registering with `POST /accounts` stays open. A missing account is refused, and a username outside the allowed shape is refused.
+
 ## Keystrikes
 
 `POST /keystrikes` accepts one key for the signed-in account. A request with no valid token is refused.
@@ -84,7 +88,7 @@ Start the store, the service, and the page:
 docker compose up --build
 ```
 
-The `word-frequency` tests cover the analysis, the account gate, the word crossings on Statistics, the sentence comparison, and the pgvector store. From `word-frequency/`:
+The `word-frequency` tests cover the analysis, the account gate, the account list and removal, the word crossings on Statistics, the sentence comparison, and the pgvector store. From `word-frequency/`:
 
 ```bash
 mvn test
