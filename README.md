@@ -46,7 +46,7 @@ For the letters in `login`, the length-2 steps are `l→o`, `o→g`, `g→i`, an
 | `word-frequency` | Keystrike analysis | [http://localhost:8080](http://localhost:8080) | `http://word-frequency:8080` |
 | `login-web` | Account, lines, statistics, and sentence check | [http://localhost:8081](http://localhost:8081) | `http://login-web:80` |
 
-`word-frequency` is a Spring Boot 4.1.2 service on Java 25, with Lombok. Its notes and the full request shape are in [word-frequency/README.md](word-frequency/README.md). The page is in [login-web/README.md](login-web/README.md).
+`word-frequency` is a Spring Boot 4.1.2 service on Java 25, with Lombok. Its notes and the full request shape are in [word-frequency/README.md](word-frequency/README.md). The described API is at [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html). The page is in [login-web/README.md](login-web/README.md).
 
 ## Accounts
 

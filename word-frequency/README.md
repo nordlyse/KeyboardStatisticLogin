@@ -10,6 +10,10 @@ A correction, sent as `Backspace` or with `"correction": true`, raises the error
 
 The counts, the error frequency, and the step means are written into a `vector(11)` column in `keystrike_ngram` and updated in place. Slot 0 is the error frequency, slot 1 is a scaled seen-count, and slots 2 through 10 are the step means in seconds. The latest ten keys for each account are held in memory so the next chain can be formed. The stored rows remain in pgvector across a restart. `profile_name` is the signed-in username.
 
+## API description
+
+Swagger UI is at [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html). The OpenAPI document is at [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs). Each route has a summary, and the models name their fields. The page itself does not need a token. Try it out uses the bearer token from `POST /sessions`, except `POST /accounts`, which stays open.
+
 ## Account
 
 `POST /accounts` registers `{ "username", "password" }`. `GET /accounts` lists every account as `{ "id", "username", "addedAt" }`. The id is the username. The password hash is left out. The list requires a bearer token. Registering stays open. `DELETE /accounts/{username}` removes that account, its sessions, its sent lines, and its stored pace, including the keys still held in memory. A later registration of the same username starts with an empty profile. A missing account is refused. The caller sends a bearer token. The password is stored as a PBKDF2-SHA256 hash. `POST /sessions` checks that pair and returns a token. Later requests send `Authorization: Bearer <token>`. `GET /sessions` reads the current account. `DELETE /sessions` closes it. `GET /lines` and `POST /lines` keep the lines the account sent, as `{ "language", "text" }`. `GET /profile` returns `{ "letters", "words" }` for the signed-in account. `GET /profile/{username}` returns that same shape for the account named in the path. The username is the account id. A missing account is refused, and a username outside the allowed shape is refused. The caller still sends a bearer token. Each mark has `from`, `to`, `seenCount`, `meanMillis`, and `errorFrequency`. A letter mark is one stored letter-to-letter step. A word mark is the pause across one space: `from` is the last letter of one word, `to` is the first letter of the next, and `meanMillis` is the sum of those two steps. `words` lists the pairs that use that crossing, up to six, as `{ "fromWord", "toWord" }`. Edge punctuation is left off the word. A comma or a double space between the letters leaves that pair unnamed. The response keeps the 16 most seen letter pairs and the 12 most seen word pauses. `GET /profile` leaves another account's rows out. `/keystrikes`, `/matches`, `/lines`, and `/profile` refuse a request with no valid token.
@@ -37,6 +41,7 @@ A following key sends the same shape. A correction sends `{"symbol":"Backspace"}
 | --- | --- | --- |
 | word-frequency | 0.1.0 | Apache-2.0 |
 | Spring Boot | 4.1.2 | Apache-2.0 |
+| springdoc OpenAPI and Swagger UI | 3.2.0 | Apache-2.0 |
 | Java | 25 | — |
 | Lombok | from Spring Boot | MIT |
 | PostgreSQL JDBC | from Spring Boot | BSD-2-Clause |

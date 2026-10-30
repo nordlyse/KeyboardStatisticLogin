@@ -37,6 +37,12 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
+        <!-- Apache-2.0. Serves the OpenAPI description and Swagger UI. Swagger UI is Apache-2.0. -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>3.2.0</version>
+        </dependency>
         <!-- MIT. Supplies accessors and constructors. -->
         <dependency>
             <groupId>org.projectlombok</groupId>
