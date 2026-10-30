@@ -27,15 +27,16 @@ public class AccountWebConfiguration implements WebMvcConfigurer {
                         "/matches", "/matches/**",
                         "/lines", "/lines/**",
                         "/profile", "/profile/**",
-                        "/sessions");
+                        "/sessions",
+                        "/accounts");
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/accounts")
                 .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
-                .allowedMethods("POST")
-                .allowedHeaders("Content-Type");
+                .allowedMethods("GET", "POST")
+                .allowedHeaders("Content-Type", "Authorization");
         registry.addMapping("/sessions")
                 .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
                 .allowedMethods("GET", "POST", "DELETE")

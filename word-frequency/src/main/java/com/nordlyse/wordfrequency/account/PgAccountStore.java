@@ -1,5 +1,6 @@
 package com.nordlyse.wordfrequency.account;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +25,20 @@ public class PgAccountStore implements AccountStore {
                 .param("username", username)
                 .query((rs, rowNumber) -> new AccountRecord(rs.getString("username"), rs.getString("password_hash")))
                 .optional();
+    }
+
+    @Override
+    public List<AccountSummary> listAccounts() {
+        return jdbc.sql("""
+                SELECT username, added_at
+                FROM account
+                ORDER BY lower(username), username
+                """)
+                .query((rs, rowNumber) -> new AccountSummary(
+                        rs.getString("username"),
+                        rs.getString("username"),
+                        rs.getObject("added_at", OffsetDateTime.class).toInstant()))
+                .list();
     }
 
     @Override

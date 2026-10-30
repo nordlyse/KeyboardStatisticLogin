@@ -7,6 +7,8 @@ public interface AccountStore {
 
     Optional<AccountRecord> findByUsername(String username);
 
+    List<AccountSummary> listAccounts();
+
     void insertAccount(String username, String passwordHash);
 
     void insertSession(String tokenHash, String username);

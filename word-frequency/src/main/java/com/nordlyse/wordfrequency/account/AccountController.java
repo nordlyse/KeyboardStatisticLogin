@@ -1,6 +1,9 @@
 package com.nordlyse.wordfrequency.account;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +18,11 @@ import lombok.RequiredArgsConstructor;
 public class AccountController {
 
     private final AccountService accounts;
+
+    @GetMapping
+    public List<AccountSummary> listAccounts() {
+        return accounts.listAccounts();
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

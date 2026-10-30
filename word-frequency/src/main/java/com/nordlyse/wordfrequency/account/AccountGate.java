@@ -23,7 +23,7 @@ class AccountGate implements HandlerInterceptor {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
-        if ("POST".equalsIgnoreCase(request.getMethod()) && "/sessions".equals(path(request))) {
+        if ("POST".equalsIgnoreCase(request.getMethod()) && isOpen(path(request))) {
             return true;
         }
         String header = request.getHeader("Authorization");
@@ -46,6 +46,10 @@ class AccountGate implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         ActiveProfile.clear();
+    }
+
+    private static boolean isOpen(String path) {
+        return "/sessions".equals(path) || "/accounts".equals(path);
     }
 
     private static String path(HttpServletRequest request) {

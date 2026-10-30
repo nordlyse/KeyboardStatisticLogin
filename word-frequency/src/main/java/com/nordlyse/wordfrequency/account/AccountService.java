@@ -41,6 +41,10 @@ public class AccountService {
         return name;
     }
 
+    public List<AccountSummary> listAccounts() {
+        return store.listAccounts();
+    }
+
     public SessionOpened openSession(String username, String password) {
         String name = username == null ? "" : username.trim();
         AccountStore.AccountRecord account = store.findByUsername(name).orElse(null);
