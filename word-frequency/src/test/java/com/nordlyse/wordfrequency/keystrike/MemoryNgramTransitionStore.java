@@ -28,7 +28,12 @@ class MemoryNgramTransitionStore implements NgramTransitionStore {
 
     @Override
     public List<NgramTransition> list(int orderSize) {
-        String prefix = ActiveProfile.orElse("local") + "\n" + orderSize + "\n";
+        return list(ActiveProfile.orElse("local"), orderSize);
+    }
+
+    @Override
+    public List<NgramTransition> list(String profile, int orderSize) {
+        String prefix = profile + "\n" + orderSize + "\n";
         return rows.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith(prefix))
                 .map(entry -> entry.getValue().transition())

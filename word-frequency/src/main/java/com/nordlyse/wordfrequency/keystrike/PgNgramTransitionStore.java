@@ -50,6 +50,11 @@ public class PgNgramTransitionStore implements NgramTransitionStore {
 
     @Override
     public List<NgramTransition> list(int orderSize) {
+        return list(profile(), orderSize);
+    }
+
+    @Override
+    public List<NgramTransition> list(String profile, int orderSize) {
         return jdbc.sql("""
                 SELECT sequence, seen_count, error_count, CAST(features AS text) AS features
                 FROM keystrike_ngram
@@ -58,7 +63,7 @@ public class PgNgramTransitionStore implements NgramTransitionStore {
                   AND seen_count > 0
                 ORDER BY seen_count DESC, sequence
                 """)
-                .param("profile", profile())
+                .param("profile", profile)
                 .param("orderSize", orderSize)
                 .query((rs, rowNumber) -> fromRow(
                         orderSize,

@@ -24,11 +24,15 @@ public class PaceProfileReader {
     }
 
     public PaceProfile read(List<String> lines) {
-        return new PaceProfile(letters(), words(crossings(lines)));
+        return new PaceProfile(letters(null), words(null, crossings(lines)));
     }
 
-    private List<PaceMark> letters() {
-        return store.list(2).stream()
+    public PaceProfile readAccount(String profile, List<String> lines) {
+        return new PaceProfile(letters(profile), words(profile, crossings(lines)));
+    }
+
+    private List<PaceMark> letters(String profile) {
+        return rows(profile, 2).stream()
                 .filter(row -> letterPair(row.sequence()) && row.stepMillis().length > 0)
                 .map(row -> mark(row, row.stepMillis()[0]))
                 .sorted(byWeight())
@@ -36,13 +40,17 @@ public class PaceProfileReader {
                 .toList();
     }
 
-    private List<PaceMark> words(Map<String, List<WordCrossing>> crossings) {
-        return store.list(3).stream()
+    private List<PaceMark> words(String profile, Map<String, List<WordCrossing>> crossings) {
+        return rows(profile, 3).stream()
                 .filter(row -> wordGap(row.sequence()) && row.stepMillis().length > 1)
                 .map(row -> mark(row, row.stepMillis()[0] + row.stepMillis()[1], crossings))
                 .sorted(byWeight())
                 .limit(WORD_LIMIT)
                 .toList();
+    }
+
+    private List<NgramTransition> rows(String profile, int orderSize) {
+        return profile == null ? store.list(orderSize) : store.list(profile, orderSize);
     }
 
     private static PaceMark mark(NgramTransition row, double meanMillis) {

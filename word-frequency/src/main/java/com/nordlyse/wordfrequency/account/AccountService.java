@@ -67,6 +67,13 @@ public class AccountService {
         }
     }
 
+    public String accountName(String username) {
+        String name = checkedUsername(username);
+        return store.findByUsername(name)
+                .map(AccountStore.AccountRecord::username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "That account is not registered."));
+    }
+
     public List<SentLine> lines(String username) {
         return store.lines(username);
     }

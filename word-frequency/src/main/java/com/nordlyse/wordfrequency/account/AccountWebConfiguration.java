@@ -48,5 +48,9 @@ public class AccountWebConfiguration implements WebMvcConfigurer {
                 .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
                 .allowedMethods("GET")
                 .allowedHeaders("Content-Type", "Authorization");
+        registry.addMapping("/profile/**")
+                .allowedOrigins("http://localhost:8081", "http://127.0.0.1:8081")
+                .allowedMethods("GET")
+                .allowedHeaders("Content-Type", "Authorization");
     }
 }

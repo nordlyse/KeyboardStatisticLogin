@@ -11,5 +11,7 @@ public interface NgramTransitionStore {
 
     List<NgramTransition> list(int orderSize);
 
+    List<NgramTransition> list(String profile, int orderSize);
+
     boolean hasSamples();
 }

@@ -17,6 +17,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -46,6 +48,7 @@ import com.nordlyse.wordfrequency.account.SessionController;
         ProfileControllerTest.MemoryStoreConfiguration.class
 })
 @TestPropertySource(properties = {"keystrike.max-order=10", "keystrike.profile=local"})
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 class ProfileControllerTest {
 
     @Autowired
@@ -112,6 +115,84 @@ class ProfileControllerTest {
                 .andExpect(jsonPath("$.words.length()").value(1))
                 .andExpect(jsonPath("$.words[0].words[0].fromWord").value("cat"))
                 .andExpect(jsonPath("$.words[0].words[0].toWord").value("nap"));
+    }
+
+    @Test
+    void readsTheNamedAccountsPace() throws Exception {
+        String ada = open("Ada");
+        type(ada, "cat nap");
+        mockMvc.perform(post("/lines")
+                        .header("Authorization", "Bearer " + ada)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"language":"en","text":"cat nap"}
+                                """))
+                .andExpect(status().isCreated());
+
+        String bee = open("Bee");
+        type(bee, "dog run");
+        mockMvc.perform(post("/lines")
+                        .header("Authorization", "Bearer " + bee)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"language":"en","text":"dog run"}
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/profile/bee").header("Authorization", "Bearer " + ada))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.words.length()").value(1))
+                .andExpect(jsonPath("$.words[0].from").value("g"))
+                .andExpect(jsonPath("$.words[0].to").value("r"))
+                .andExpect(jsonPath("$.words[0].words[0].fromWord").value("dog"))
+                .andExpect(jsonPath("$.words[0].words[0].toWord").value("run"))
+                .andExpect(jsonPath("$.letters[?(@.from == 'd' && @.to == 'o')]").exists());
+
+        mockMvc.perform(get("/profile").header("Authorization", "Bearer " + ada))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.words[0].words[0].fromWord").value("cat"));
+    }
+
+    @Test
+    void returnsAnEmptyPaceWhenTheAccountHasNoLines() throws Exception {
+        String ada = open("Ada");
+
+        mockMvc.perform(get("/profile/Ada").header("Authorization", "Bearer " + ada))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.letters.length()").value(0))
+                .andExpect(jsonPath("$.words.length()").value(0));
+    }
+
+    @Test
+    void refusesAnUnknownAccount() throws Exception {
+        String ada = open("Ada");
+
+        mockMvc.perform(get("/profile/missing").header("Authorization", "Bearer " + ada))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void refusesAUsernameOutsideTheAllowedShape() throws Exception {
+        String ada = open("Ada");
+
+        mockMvc.perform(get("/profile/Ada!").header("Authorization", "Bearer " + ada))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void refusesANamedProfileWithoutAToken() throws Exception {
+        mockMvc.perform(get("/profile/Ada"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void allowsANamedProfileReadFromThePage() throws Exception {
+        mockMvc.perform(options("/profile/Ada")
+                        .header("Origin", "http://localhost:8081")
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers", "Content-Type, Authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:8081"));
     }
 
     private String open(String username) throws Exception {
